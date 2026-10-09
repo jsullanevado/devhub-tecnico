@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP05_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP05_colaboracion">
+    <bpmn:participant id="SP05_pool" name="SP05 · Registrar manual en BD" processRef="SP05_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP05_proceso" name="SP05 · Registrar manual en BD" isExecutable="false">
+    <bpmn:documentation>Subproceso de T06.</bpmn:documentation>
+    <bpmn:laneSet id="SP05_carriles">
+      <bpmn:lane id="SP05_carril_front" name="Front">
+      </bpmn:lane>
+      <bpmn:lane id="SP05_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP05_carril_bd" name="BD">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>rls</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>buscar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gExiste</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finNoExiste</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>metadatos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>trigger</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>check</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gCumple</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finDato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>guardar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Insert en manuals">
+      <bpmn:outgoing>SP05_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="rls" name="RLS: a nombre propio">
+      <bpmn:incoming>SP05_f1</bpmn:incoming>
+      <bpmn:outgoing>SP05_f2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="buscar" name="Trigger: buscar el archivo en storage.objects">
+      <bpmn:incoming>SP05_f2</bpmn:incoming>
+      <bpmn:outgoing>SP05_f3</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gExiste" name="¿Existe y es accesible?">
+      <bpmn:incoming>SP05_f3</bpmn:incoming>
+      <bpmn:outgoing>SP05_f4</bpmn:outgoing>
+      <bpmn:outgoing>SP05_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finNoExiste" name="23503 archivo inexistente">
+      <bpmn:incoming>SP05_f4</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finNoExiste_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="metadatos" name="Tomar MIME y tamaño reales del Storage">
+      <bpmn:incoming>SP05_f5</bpmn:incoming>
+      <bpmn:outgoing>SP05_f6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="trigger" name="Trigger: etiquetas y search_vector">
+      <bpmn:incoming>SP05_f6</bpmn:incoming>
+      <bpmn:outgoing>SP05_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="check" name="CHECK: ruta del autor, MIME y tamaño">
+      <bpmn:incoming>SP05_f7</bpmn:incoming>
+      <bpmn:outgoing>SP05_f8</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gCumple" name="¿Cumple?">
+      <bpmn:incoming>SP05_f8</bpmn:incoming>
+      <bpmn:outgoing>SP05_f9</bpmn:outgoing>
+      <bpmn:outgoing>SP05_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finDato" name="23514 dato inválido">
+      <bpmn:incoming>SP05_f9</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finDato_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="guardar" name="Guardar el manual">
+      <bpmn:incoming>SP05_f10</bpmn:incoming>
+      <bpmn:outgoing>SP05_f11</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="fin" name="Manual registrado">
+      <bpmn:incoming>SP05_f11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP05_f1" sourceRef="inicio" targetRef="rls" />
+    <bpmn:sequenceFlow id="SP05_f2" sourceRef="rls" targetRef="buscar" />
+    <bpmn:sequenceFlow id="SP05_f3" sourceRef="buscar" targetRef="gExiste" />
+    <bpmn:sequenceFlow id="SP05_f4" sourceRef="gExiste" targetRef="finNoExiste" name="No" />
+    <bpmn:sequenceFlow id="SP05_f5" sourceRef="gExiste" targetRef="metadatos" name="Sí" />
+    <bpmn:sequenceFlow id="SP05_f6" sourceRef="metadatos" targetRef="trigger" />
+    <bpmn:sequenceFlow id="SP05_f7" sourceRef="trigger" targetRef="check" />
+    <bpmn:sequenceFlow id="SP05_f8" sourceRef="check" targetRef="gCumple" />
+    <bpmn:sequenceFlow id="SP05_f9" sourceRef="gCumple" targetRef="finDato" name="No" />
+    <bpmn:sequenceFlow id="SP05_f10" sourceRef="gCumple" targetRef="guardar" name="Sí" />
+    <bpmn:sequenceFlow id="SP05_f11" sourceRef="guardar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP05_diagrama" name="SP05 · Registrar manual en BD">
+    <bpmndi:BPMNPlane id="SP05_plano" bpmnElement="SP05_colaboracion">
+      <bpmndi:BPMNShape id="SP05_pool_di" bpmnElement="SP05_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1870" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP05_carril_front_di" bpmnElement="SP05_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP05_carril_servicio_di" bpmnElement="SP05_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP05_carril_bd_di" bpmnElement="SP05_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rls_di" bpmnElement="rls">
+        <dc:Bounds x="315" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="buscar_di" bpmnElement="buscar">
+        <dc:Bounds x="490" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gExiste_di" bpmnElement="gExiste" isMarkerVisible="true">
+        <dc:Bounds x="705" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finNoExiste_di" bpmnElement="finNoExiste">
+        <dc:Bounds x="887" y="659" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="metadatos_di" bpmnElement="metadatos">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="trigger_di" bpmnElement="trigger">
+        <dc:Bounds x="1015" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="check_di" bpmnElement="check">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gCumple_di" bpmnElement="gCumple" isMarkerVisible="true">
+        <dc:Bounds x="1405" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finDato_di" bpmnElement="finDato">
+        <dc:Bounds x="1587" y="659" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="guardar_di" bpmnElement="guardar">
+        <dc:Bounds x="1540" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1762" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SP05_f1_di" bpmnElement="SP05_f1">
+        <di:waypoint x="223" y="577" />
+        <di:waypoint x="315" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f2_di" bpmnElement="SP05_f2">
+        <di:waypoint x="445" y="577" />
+        <di:waypoint x="490" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f3_di" bpmnElement="SP05_f3">
+        <di:waypoint x="620" y="577" />
+        <di:waypoint x="705" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f4_di" bpmnElement="SP05_f4">
+        <di:waypoint x="730" y="602" />
+        <di:waypoint x="730" y="677" />
+        <di:waypoint x="887" y="677" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="736" y="659" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f5_di" bpmnElement="SP05_f5">
+        <di:waypoint x="755" y="577" />
+        <di:waypoint x="840" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f6_di" bpmnElement="SP05_f6">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1015" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f7_di" bpmnElement="SP05_f7">
+        <di:waypoint x="1145" y="577" />
+        <di:waypoint x="1190" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f8_di" bpmnElement="SP05_f8">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1405" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f9_di" bpmnElement="SP05_f9">
+        <di:waypoint x="1430" y="602" />
+        <di:waypoint x="1430" y="677" />
+        <di:waypoint x="1587" y="677" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="659" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f10_di" bpmnElement="SP05_f10">
+        <di:waypoint x="1455" y="577" />
+        <di:waypoint x="1540" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1504" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP05_f11_di" bpmnElement="SP05_f11">
+        <di:waypoint x="1670" y="577" />
+        <di:waypoint x="1762" y="577" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

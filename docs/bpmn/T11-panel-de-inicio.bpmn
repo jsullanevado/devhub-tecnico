@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T11_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T11_colaboracion">
+    <bpmn:participant id="T11_pool" name="T11 · Panel de inicio" processRef="T11_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T11_proceso" name="T11 · Panel de inicio" isExecutable="false">
+    <bpmn:laneSet id="T11_carriles">
+      <bpmn:lane id="T11_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>pDividir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>pUnir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>pintar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T11_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>resumen</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>favoritos</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T11_carril_bd" name="BD">
+          <bpmn:flowNodeRef>calcular</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>rlsFav</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Abre /dashboard">
+      <bpmn:outgoing>T11_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="pDividir" name="">
+      <bpmn:incoming>T11_f1</bpmn:incoming>
+      <bpmn:outgoing>T11_f2</bpmn:outgoing>
+      <bpmn:outgoing>T11_f3</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="resumen" name="RPC dashboard_summary">
+      <bpmn:incoming>T11_f2</bpmn:incoming>
+      <bpmn:outgoing>T11_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="calcular" name="SP09 · Calcular resumen del panel">
+      <bpmn:documentation>Detalle en SP09-calcular-resumen-del-panel.bpmn</bpmn:documentation>
+      <bpmn:incoming>T11_f4</bpmn:incoming>
+      <bpmn:outgoing>T11_f5</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:serviceTask id="favoritos" name="PostgREST: favoritos del usuario">
+      <bpmn:incoming>T11_f3</bpmn:incoming>
+      <bpmn:outgoing>T11_f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="rlsFav" name="RLS: solo favoritos propios">
+      <bpmn:incoming>T11_f6</bpmn:incoming>
+      <bpmn:outgoing>T11_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:parallelGateway id="pUnir" name="">
+      <bpmn:incoming>T11_f5</bpmn:incoming>
+      <bpmn:incoming>T11_f7</bpmn:incoming>
+      <bpmn:outgoing>T11_f8</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="pintar" name="Pintar contadores, recientes, favoritos, etiquetas y almacenamiento">
+      <bpmn:incoming>T11_f8</bpmn:incoming>
+      <bpmn:outgoing>T11_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="fin" name="Panel mostrado">
+      <bpmn:incoming>T11_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T11_f1" sourceRef="inicio" targetRef="pDividir" />
+    <bpmn:sequenceFlow id="T11_f2" sourceRef="pDividir" targetRef="resumen" />
+    <bpmn:sequenceFlow id="T11_f3" sourceRef="pDividir" targetRef="favoritos" />
+    <bpmn:sequenceFlow id="T11_f4" sourceRef="resumen" targetRef="calcular" />
+    <bpmn:sequenceFlow id="T11_f5" sourceRef="calcular" targetRef="pUnir" />
+    <bpmn:sequenceFlow id="T11_f6" sourceRef="favoritos" targetRef="rlsFav" />
+    <bpmn:sequenceFlow id="T11_f7" sourceRef="rlsFav" targetRef="pUnir" />
+    <bpmn:sequenceFlow id="T11_f8" sourceRef="pUnir" targetRef="pintar" />
+    <bpmn:sequenceFlow id="T11_f9" sourceRef="pintar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T11_diagrama" name="T11 · Panel de inicio">
+    <bpmndi:BPMNPlane id="T11_plano" bpmnElement="T11_colaboracion">
+      <bpmndi:BPMNShape id="T11_pool_di" bpmnElement="T11_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1345" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T11_carril_front_di" bpmnElement="T11_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T11_carril_servicio_di" bpmnElement="T11_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T11_carril_bd_di" bpmnElement="T11_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pDividir_di" bpmnElement="pDividir">
+        <dc:Bounds x="355" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="resumen_di" bpmnElement="resumen">
+        <dc:Bounds x="490" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="calcular_di" bpmnElement="calcular" isExpanded="false">
+        <dc:Bounds x="665" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="favoritos_di" bpmnElement="favoritos">
+        <dc:Bounds x="490" y="411" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rlsFav_di" bpmnElement="rlsFav">
+        <dc:Bounds x="665" y="641" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pUnir_di" bpmnElement="pUnir">
+        <dc:Bounds x="880" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="pintar_di" bpmnElement="pintar">
+        <dc:Bounds x="1015" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1237" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T11_f1_di" bpmnElement="T11_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="355" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f2_di" bpmnElement="T11_f2">
+        <di:waypoint x="405" y="117" />
+        <di:waypoint x="448" y="117" />
+        <di:waypoint x="448" y="347" />
+        <di:waypoint x="490" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f3_di" bpmnElement="T11_f3">
+        <di:waypoint x="405" y="117" />
+        <di:waypoint x="448" y="117" />
+        <di:waypoint x="448" y="447" />
+        <di:waypoint x="490" y="447" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f4_di" bpmnElement="T11_f4">
+        <di:waypoint x="620" y="347" />
+        <di:waypoint x="643" y="347" />
+        <di:waypoint x="643" y="577" />
+        <di:waypoint x="665" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f5_di" bpmnElement="T11_f5">
+        <di:waypoint x="795" y="577" />
+        <di:waypoint x="838" y="577" />
+        <di:waypoint x="838" y="117" />
+        <di:waypoint x="880" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f6_di" bpmnElement="T11_f6">
+        <di:waypoint x="620" y="447" />
+        <di:waypoint x="643" y="447" />
+        <di:waypoint x="643" y="677" />
+        <di:waypoint x="665" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f7_di" bpmnElement="T11_f7">
+        <di:waypoint x="795" y="677" />
+        <di:waypoint x="838" y="677" />
+        <di:waypoint x="838" y="117" />
+        <di:waypoint x="880" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f8_di" bpmnElement="T11_f8">
+        <di:waypoint x="930" y="117" />
+        <di:waypoint x="1015" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T11_f9_di" bpmnElement="T11_f9">
+        <di:waypoint x="1145" y="117" />
+        <di:waypoint x="1237" y="117" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

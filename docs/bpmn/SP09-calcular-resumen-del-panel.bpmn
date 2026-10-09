@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP09_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP09_colaboracion">
+    <bpmn:participant id="SP09_pool" name="SP09 · Calcular resumen del panel (dashboard_summary)" processRef="SP09_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP09_proceso" name="SP09 · Calcular resumen del panel (dashboard_summary)" isExecutable="false">
+    <bpmn:documentation>Subproceso de T11. SECURITY INVOKER: solo cuenta lo que el usuario puede ver.</bpmn:documentation>
+    <bpmn:laneSet id="SP09_carriles">
+      <bpmn:lane id="SP09_carril_front" name="Front">
+      </bpmn:lane>
+      <bpmn:lane id="SP09_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP09_carril_bd" name="BD">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>unir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>contar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>recientes</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>lecciones</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>manuales</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>etiquetas</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>storage</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>json</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Llamada a dashboard_summary">
+      <bpmn:outgoing>SP09_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="unir" name="Unir recursos visibles de las 5 tablas (RLS)">
+      <bpmn:incoming>SP09_f1</bpmn:incoming>
+      <bpmn:outgoing>SP09_f2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="contar" name="Contar por tipo (total y míos)">
+      <bpmn:incoming>SP09_f2</bpmn:incoming>
+      <bpmn:outgoing>SP09_f3</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="recientes" name="8 recientes con autor y 5 propios">
+      <bpmn:incoming>SP09_f3</bpmn:incoming>
+      <bpmn:outgoing>SP09_f4</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="lecciones" name="Lecciones abiertas, críticas y altas">
+      <bpmn:incoming>SP09_f4</bpmn:incoming>
+      <bpmn:outgoing>SP09_f5</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="manuales" name="Top 5 manuales más descargados">
+      <bpmn:incoming>SP09_f5</bpmn:incoming>
+      <bpmn:outgoing>SP09_f6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="etiquetas" name="Top 15 etiquetas">
+      <bpmn:incoming>SP09_f6</bpmn:incoming>
+      <bpmn:outgoing>SP09_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="storage" name="Bytes usados en Storage (SECURITY DEFINER)">
+      <bpmn:incoming>SP09_f7</bpmn:incoming>
+      <bpmn:outgoing>SP09_f8</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="json" name="Devolver un único JSON">
+      <bpmn:incoming>SP09_f8</bpmn:incoming>
+      <bpmn:outgoing>SP09_f9</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="fin" name="Resumen calculado">
+      <bpmn:incoming>SP09_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP09_f1" sourceRef="inicio" targetRef="unir" />
+    <bpmn:sequenceFlow id="SP09_f2" sourceRef="unir" targetRef="contar" />
+    <bpmn:sequenceFlow id="SP09_f3" sourceRef="contar" targetRef="recientes" />
+    <bpmn:sequenceFlow id="SP09_f4" sourceRef="recientes" targetRef="lecciones" />
+    <bpmn:sequenceFlow id="SP09_f5" sourceRef="lecciones" targetRef="manuales" />
+    <bpmn:sequenceFlow id="SP09_f6" sourceRef="manuales" targetRef="etiquetas" />
+    <bpmn:sequenceFlow id="SP09_f7" sourceRef="etiquetas" targetRef="storage" />
+    <bpmn:sequenceFlow id="SP09_f8" sourceRef="storage" targetRef="json" />
+    <bpmn:sequenceFlow id="SP09_f9" sourceRef="json" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP09_diagrama" name="SP09 · Calcular resumen del panel (dashboard_summary)">
+    <bpmndi:BPMNPlane id="SP09_plano" bpmnElement="SP09_colaboracion">
+      <bpmndi:BPMNShape id="SP09_pool_di" bpmnElement="SP09_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1870" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP09_carril_front_di" bpmnElement="SP09_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP09_carril_servicio_di" bpmnElement="SP09_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP09_carril_bd_di" bpmnElement="SP09_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1840" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="unir_di" bpmnElement="unir">
+        <dc:Bounds x="315" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contar_di" bpmnElement="contar">
+        <dc:Bounds x="490" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="recientes_di" bpmnElement="recientes">
+        <dc:Bounds x="665" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="lecciones_di" bpmnElement="lecciones">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="manuales_di" bpmnElement="manuales">
+        <dc:Bounds x="1015" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="etiquetas_di" bpmnElement="etiquetas">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="storage_di" bpmnElement="storage">
+        <dc:Bounds x="1365" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="json_di" bpmnElement="json">
+        <dc:Bounds x="1540" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1762" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SP09_f1_di" bpmnElement="SP09_f1">
+        <di:waypoint x="223" y="577" />
+        <di:waypoint x="315" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f2_di" bpmnElement="SP09_f2">
+        <di:waypoint x="445" y="577" />
+        <di:waypoint x="490" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f3_di" bpmnElement="SP09_f3">
+        <di:waypoint x="620" y="577" />
+        <di:waypoint x="665" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f4_di" bpmnElement="SP09_f4">
+        <di:waypoint x="795" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f5_di" bpmnElement="SP09_f5">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1015" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f6_di" bpmnElement="SP09_f6">
+        <di:waypoint x="1145" y="577" />
+        <di:waypoint x="1190" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f7_di" bpmnElement="SP09_f7">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1365" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f8_di" bpmnElement="SP09_f8">
+        <di:waypoint x="1495" y="577" />
+        <di:waypoint x="1540" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP09_f9_di" bpmnElement="SP09_f9">
+        <di:waypoint x="1670" y="577" />
+        <di:waypoint x="1762" y="577" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T04_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T04_colaboracion">
+    <bpmn:participant id="T04_pool" name="T04 · Crear o editar recurso (script, lección o nota)" processRef="T04_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T04_proceso" name="T04 · Crear o editar recurso (script, lección o nota)" isExecutable="false">
+    <bpmn:documentation>Mismo flujo para scripts, lecciones aprendidas y notas. Manuales: T06. Servicios: T08.</bpmn:documentation>
+    <bpmn:laneSet id="T04_carriles">
+      <bpmn:lane id="T04_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gEdicion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>cargar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gUnir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>completar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>validar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gValido</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>marcar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>error</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finError</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>notificar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T04_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>guardar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gGuardado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T04_carril_bd" name="BD">
+          <bpmn:flowNodeRef>bd</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Abre el formulario (Nuevo o Editar)">
+      <bpmn:outgoing>T04_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="gEdicion" name="¿Edición?">
+      <bpmn:incoming>T04_f1</bpmn:incoming>
+      <bpmn:outgoing>T04_f2</bpmn:outgoing>
+      <bpmn:outgoing>T04_f3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:subProcess id="cargar" name="SP02 · Cargar recurso y permisos">
+      <bpmn:documentation>Detalle en SP02-cargar-recurso-y-permisos.bpmn</bpmn:documentation>
+      <bpmn:incoming>T04_f2</bpmn:incoming>
+      <bpmn:outgoing>T04_f4</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="gUnir" name="">
+      <bpmn:incoming>T04_f3</bpmn:incoming>
+      <bpmn:incoming>T04_f4</bpmn:incoming>
+      <bpmn:outgoing>T04_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="completar" name="Completar título, etiquetas, visibilidad y contenido">
+      <bpmn:incoming>T04_f5</bpmn:incoming>
+      <bpmn:incoming>T04_f9</bpmn:incoming>
+      <bpmn:outgoing>T04_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="validar" name="Validar formulario (mismas reglas que la BD)">
+      <bpmn:incoming>T04_f6</bpmn:incoming>
+      <bpmn:outgoing>T04_f7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gValido" name="¿Válido?">
+      <bpmn:incoming>T04_f7</bpmn:incoming>
+      <bpmn:outgoing>T04_f8</bpmn:outgoing>
+      <bpmn:outgoing>T04_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="marcar" name="Marcar errores">
+      <bpmn:incoming>T04_f8</bpmn:incoming>
+      <bpmn:outgoing>T04_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="guardar" name="PostgREST: insert / update">
+      <bpmn:incoming>T04_f10</bpmn:incoming>
+      <bpmn:outgoing>T04_f11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="bd" name="SP03 · Validar y guardar en BD">
+      <bpmn:documentation>Detalle en SP03-validar-y-guardar-en-bd.bpmn</bpmn:documentation>
+      <bpmn:incoming>T04_f11</bpmn:incoming>
+      <bpmn:outgoing>T04_f12</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="gGuardado" name="¿Guardado?">
+      <bpmn:incoming>T04_f12</bpmn:incoming>
+      <bpmn:outgoing>T04_f13</bpmn:outgoing>
+      <bpmn:outgoing>T04_f15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="error" name="Mostrar el error traducido">
+      <bpmn:incoming>T04_f13</bpmn:incoming>
+      <bpmn:outgoing>T04_f14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finError" name="No guardado">
+      <bpmn:incoming>T04_f14</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finError_def" />
+    </bpmn:endEvent>
+    <bpmn:task id="notificar" name="Notificar y abrir el detalle">
+      <bpmn:incoming>T04_f15</bpmn:incoming>
+      <bpmn:outgoing>T04_f16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="fin" name="Recurso guardado">
+      <bpmn:incoming>T04_f16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T04_f1" sourceRef="inicio" targetRef="gEdicion" />
+    <bpmn:sequenceFlow id="T04_f2" sourceRef="gEdicion" targetRef="cargar" name="Sí" />
+    <bpmn:sequenceFlow id="T04_f3" sourceRef="gEdicion" targetRef="gUnir" name="No (nuevo)" />
+    <bpmn:sequenceFlow id="T04_f4" sourceRef="cargar" targetRef="gUnir" />
+    <bpmn:sequenceFlow id="T04_f5" sourceRef="gUnir" targetRef="completar" />
+    <bpmn:sequenceFlow id="T04_f6" sourceRef="completar" targetRef="validar" />
+    <bpmn:sequenceFlow id="T04_f7" sourceRef="validar" targetRef="gValido" />
+    <bpmn:sequenceFlow id="T04_f8" sourceRef="gValido" targetRef="marcar" name="No" />
+    <bpmn:sequenceFlow id="T04_f9" sourceRef="marcar" targetRef="completar" />
+    <bpmn:sequenceFlow id="T04_f10" sourceRef="gValido" targetRef="guardar" name="Sí" />
+    <bpmn:sequenceFlow id="T04_f11" sourceRef="guardar" targetRef="bd" />
+    <bpmn:sequenceFlow id="T04_f12" sourceRef="bd" targetRef="gGuardado" />
+    <bpmn:sequenceFlow id="T04_f13" sourceRef="gGuardado" targetRef="error" name="No" />
+    <bpmn:sequenceFlow id="T04_f14" sourceRef="error" targetRef="finError" />
+    <bpmn:sequenceFlow id="T04_f15" sourceRef="gGuardado" targetRef="notificar" name="Sí" />
+    <bpmn:sequenceFlow id="T04_f16" sourceRef="notificar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T04_diagrama" name="T04 · Crear o editar recurso (script, lección o nota)">
+    <bpmndi:BPMNPlane id="T04_plano" bpmnElement="T04_colaboracion">
+      <bpmndi:BPMNShape id="T04_pool_di" bpmnElement="T04_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2220" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T04_carril_front_di" bpmnElement="T04_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T04_carril_servicio_di" bpmnElement="T04_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T04_carril_bd_di" bpmnElement="T04_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gEdicion_di" bpmnElement="gEdicion" isMarkerVisible="true">
+        <dc:Bounds x="355" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="cargar_di" bpmnElement="cargar" isExpanded="false">
+        <dc:Bounds x="490" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gUnir_di" bpmnElement="gUnir" isMarkerVisible="true">
+        <dc:Bounds x="705" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="completar_di" bpmnElement="completar">
+        <dc:Bounds x="840" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="validar_di" bpmnElement="validar">
+        <dc:Bounds x="1015" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gValido_di" bpmnElement="gValido" isMarkerVisible="true">
+        <dc:Bounds x="1230" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="marcar_di" bpmnElement="marcar">
+        <dc:Bounds x="1190" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="guardar_di" bpmnElement="guardar">
+        <dc:Bounds x="1365" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="bd_di" bpmnElement="bd" isExpanded="false">
+        <dc:Bounds x="1540" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gGuardado_di" bpmnElement="gGuardado" isMarkerVisible="true">
+        <dc:Bounds x="1755" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="error_di" bpmnElement="error">
+        <dc:Bounds x="1890" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finError_di" bpmnElement="finError">
+        <dc:Bounds x="2112" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="notificar_di" bpmnElement="notificar">
+        <dc:Bounds x="1890" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="2112" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T04_f1_di" bpmnElement="T04_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="355" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f2_di" bpmnElement="T04_f2">
+        <di:waypoint x="380" y="142" />
+        <di:waypoint x="380" y="217" />
+        <di:waypoint x="490" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="386" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f3_di" bpmnElement="T04_f3">
+        <di:waypoint x="405" y="117" />
+        <di:waypoint x="705" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="99" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f4_di" bpmnElement="T04_f4">
+        <di:waypoint x="620" y="217" />
+        <di:waypoint x="730" y="217" />
+        <di:waypoint x="730" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f5_di" bpmnElement="T04_f5">
+        <di:waypoint x="755" y="117" />
+        <di:waypoint x="840" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f6_di" bpmnElement="T04_f6">
+        <di:waypoint x="970" y="117" />
+        <di:waypoint x="1015" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f7_di" bpmnElement="T04_f7">
+        <di:waypoint x="1145" y="117" />
+        <di:waypoint x="1230" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f8_di" bpmnElement="T04_f8">
+        <di:waypoint x="1255" y="142" />
+        <di:waypoint x="1255" y="181" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1261" y="144" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f9_di" bpmnElement="T04_f9">
+        <di:waypoint x="1255" y="253" />
+        <di:waypoint x="1255" y="263" />
+        <di:waypoint x="905" y="263" />
+        <di:waypoint x="905" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f10_di" bpmnElement="T04_f10">
+        <di:waypoint x="1280" y="117" />
+        <di:waypoint x="1323" y="117" />
+        <di:waypoint x="1323" y="347" />
+        <di:waypoint x="1365" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1329" y="329" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f11_di" bpmnElement="T04_f11">
+        <di:waypoint x="1495" y="347" />
+        <di:waypoint x="1518" y="347" />
+        <di:waypoint x="1518" y="577" />
+        <di:waypoint x="1540" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f12_di" bpmnElement="T04_f12">
+        <di:waypoint x="1670" y="577" />
+        <di:waypoint x="1713" y="577" />
+        <di:waypoint x="1713" y="347" />
+        <di:waypoint x="1755" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f13_di" bpmnElement="T04_f13">
+        <di:waypoint x="1805" y="347" />
+        <di:waypoint x="1848" y="347" />
+        <di:waypoint x="1848" y="217" />
+        <di:waypoint x="1890" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1854" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f14_di" bpmnElement="T04_f14">
+        <di:waypoint x="2020" y="217" />
+        <di:waypoint x="2112" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f15_di" bpmnElement="T04_f15">
+        <di:waypoint x="1805" y="347" />
+        <di:waypoint x="1848" y="347" />
+        <di:waypoint x="1848" y="117" />
+        <di:waypoint x="1890" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1854" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T04_f16_di" bpmnElement="T04_f16">
+        <di:waypoint x="2020" y="117" />
+        <di:waypoint x="2112" y="117" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

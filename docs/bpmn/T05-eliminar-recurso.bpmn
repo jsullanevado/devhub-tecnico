@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T05_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T05_colaboracion">
+    <bpmn:participant id="T05_pool" name="T05 · Eliminar recurso" processRef="T05_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T05_proceso" name="T05 · Eliminar recurso" isExecutable="false">
+    <bpmn:laneSet id="T05_carriles">
+      <bpmn:lane id="T05_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>confirmar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gConfirmado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finCancelado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>sinPermiso</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finError</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>notificar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T05_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>borrar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gBorrado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gArchivo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>storage</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gUnir</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T05_carril_bd" name="BD">
+          <bpmn:flowNodeRef>rls</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>cascada</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Pulsa «Eliminar» en la ficha">
+      <bpmn:outgoing>T05_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="confirmar" name="Confirmar en el diálogo">
+      <bpmn:incoming>T05_f1</bpmn:incoming>
+      <bpmn:outgoing>T05_f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gConfirmado" name="¿Confirmado?">
+      <bpmn:incoming>T05_f2</bpmn:incoming>
+      <bpmn:outgoing>T05_f3</bpmn:outgoing>
+      <bpmn:outgoing>T05_f4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finCancelado" name="Cancelado">
+      <bpmn:incoming>T05_f3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="borrar" name="PostgREST: delete … returning">
+      <bpmn:incoming>T05_f4</bpmn:incoming>
+      <bpmn:outgoing>T05_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="rls" name="RLS DELETE: propietario, superadmin o admin si es público">
+      <bpmn:incoming>T05_f5</bpmn:incoming>
+      <bpmn:outgoing>T05_f6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gBorrado" name="¿Fila eliminada?">
+      <bpmn:incoming>T05_f6</bpmn:incoming>
+      <bpmn:outgoing>T05_f7</bpmn:outgoing>
+      <bpmn:outgoing>T05_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sinPermiso" name="Mostrar «sin permisos»">
+      <bpmn:incoming>T05_f7</bpmn:incoming>
+      <bpmn:outgoing>T05_f8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finError" name="No eliminado">
+      <bpmn:incoming>T05_f8</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finError_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="cascada" name="Cascada: borrar los favoritos del recurso">
+      <bpmn:incoming>T05_f9</bpmn:incoming>
+      <bpmn:outgoing>T05_f10</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gArchivo" name="¿Tenía archivo (manual o SoapUI)?">
+      <bpmn:incoming>T05_f10</bpmn:incoming>
+      <bpmn:outgoing>T05_f11</bpmn:outgoing>
+      <bpmn:outgoing>T05_f12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="storage" name="Storage: borrar el archivo (ya desvinculado)">
+      <bpmn:incoming>T05_f11</bpmn:incoming>
+      <bpmn:outgoing>T05_f13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gUnir" name="">
+      <bpmn:incoming>T05_f12</bpmn:incoming>
+      <bpmn:incoming>T05_f13</bpmn:incoming>
+      <bpmn:outgoing>T05_f14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="notificar" name="Notificar y volver al listado">
+      <bpmn:incoming>T05_f14</bpmn:incoming>
+      <bpmn:outgoing>T05_f15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="fin" name="Recurso eliminado">
+      <bpmn:incoming>T05_f15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T05_f1" sourceRef="inicio" targetRef="confirmar" />
+    <bpmn:sequenceFlow id="T05_f2" sourceRef="confirmar" targetRef="gConfirmado" />
+    <bpmn:sequenceFlow id="T05_f3" sourceRef="gConfirmado" targetRef="finCancelado" name="No" />
+    <bpmn:sequenceFlow id="T05_f4" sourceRef="gConfirmado" targetRef="borrar" name="Sí" />
+    <bpmn:sequenceFlow id="T05_f5" sourceRef="borrar" targetRef="rls" />
+    <bpmn:sequenceFlow id="T05_f6" sourceRef="rls" targetRef="gBorrado" />
+    <bpmn:sequenceFlow id="T05_f7" sourceRef="gBorrado" targetRef="sinPermiso" name="No" />
+    <bpmn:sequenceFlow id="T05_f8" sourceRef="sinPermiso" targetRef="finError" />
+    <bpmn:sequenceFlow id="T05_f9" sourceRef="gBorrado" targetRef="cascada" name="Sí" />
+    <bpmn:sequenceFlow id="T05_f10" sourceRef="cascada" targetRef="gArchivo" />
+    <bpmn:sequenceFlow id="T05_f11" sourceRef="gArchivo" targetRef="storage" name="Sí" />
+    <bpmn:sequenceFlow id="T05_f12" sourceRef="gArchivo" targetRef="gUnir" name="No" />
+    <bpmn:sequenceFlow id="T05_f13" sourceRef="storage" targetRef="gUnir" />
+    <bpmn:sequenceFlow id="T05_f14" sourceRef="gUnir" targetRef="notificar" />
+    <bpmn:sequenceFlow id="T05_f15" sourceRef="notificar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T05_diagrama" name="T05 · Eliminar recurso">
+    <bpmndi:BPMNPlane id="T05_plano" bpmnElement="T05_colaboracion">
+      <bpmndi:BPMNShape id="T05_pool_di" bpmnElement="T05_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2220" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T05_carril_front_di" bpmnElement="T05_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T05_carril_servicio_di" bpmnElement="T05_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T05_carril_bd_di" bpmnElement="T05_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="confirmar_di" bpmnElement="confirmar">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gConfirmado_di" bpmnElement="gConfirmado" isMarkerVisible="true">
+        <dc:Bounds x="530" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finCancelado_di" bpmnElement="finCancelado">
+        <dc:Bounds x="712" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="borrar_di" bpmnElement="borrar">
+        <dc:Bounds x="665" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rls_di" bpmnElement="rls">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gBorrado_di" bpmnElement="gBorrado" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sinPermiso_di" bpmnElement="sinPermiso">
+        <dc:Bounds x="1190" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finError_di" bpmnElement="finError">
+        <dc:Bounds x="1412" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="cascada_di" bpmnElement="cascada">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gArchivo_di" bpmnElement="gArchivo" isMarkerVisible="true">
+        <dc:Bounds x="1405" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="storage_di" bpmnElement="storage">
+        <dc:Bounds x="1540" y="411" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gUnir_di" bpmnElement="gUnir" isMarkerVisible="true">
+        <dc:Bounds x="1755" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="notificar_di" bpmnElement="notificar">
+        <dc:Bounds x="1890" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="2112" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T05_f1_di" bpmnElement="T05_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f2_di" bpmnElement="T05_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="530" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f3_di" bpmnElement="T05_f3">
+        <di:waypoint x="555" y="142" />
+        <di:waypoint x="555" y="217" />
+        <di:waypoint x="712" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f4_di" bpmnElement="T05_f4">
+        <di:waypoint x="580" y="117" />
+        <di:waypoint x="623" y="117" />
+        <di:waypoint x="623" y="347" />
+        <di:waypoint x="665" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="629" y="329" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f5_di" bpmnElement="T05_f5">
+        <di:waypoint x="795" y="347" />
+        <di:waypoint x="818" y="347" />
+        <di:waypoint x="818" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f6_di" bpmnElement="T05_f6">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1013" y="577" />
+        <di:waypoint x="1013" y="347" />
+        <di:waypoint x="1055" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f7_di" bpmnElement="T05_f7">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1148" y="347" />
+        <di:waypoint x="1148" y="217" />
+        <di:waypoint x="1190" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f8_di" bpmnElement="T05_f8">
+        <di:waypoint x="1320" y="217" />
+        <di:waypoint x="1412" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f9_di" bpmnElement="T05_f9">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1148" y="347" />
+        <di:waypoint x="1148" y="577" />
+        <di:waypoint x="1190" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f10_di" bpmnElement="T05_f10">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1363" y="577" />
+        <di:waypoint x="1363" y="347" />
+        <di:waypoint x="1405" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f11_di" bpmnElement="T05_f11">
+        <di:waypoint x="1430" y="372" />
+        <di:waypoint x="1430" y="447" />
+        <di:waypoint x="1540" y="447" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="429" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f12_di" bpmnElement="T05_f12">
+        <di:waypoint x="1455" y="347" />
+        <di:waypoint x="1755" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1611" y="329" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f13_di" bpmnElement="T05_f13">
+        <di:waypoint x="1670" y="447" />
+        <di:waypoint x="1780" y="447" />
+        <di:waypoint x="1780" y="372" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f14_di" bpmnElement="T05_f14">
+        <di:waypoint x="1805" y="347" />
+        <di:waypoint x="1848" y="347" />
+        <di:waypoint x="1848" y="117" />
+        <di:waypoint x="1890" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T05_f15_di" bpmnElement="T05_f15">
+        <di:waypoint x="2020" y="117" />
+        <di:waypoint x="2112" y="117" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

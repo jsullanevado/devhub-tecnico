@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T10_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T10_colaboracion">
+    <bpmn:participant id="T10_pool" name="T10 · Marcar o quitar favorito" processRef="T10_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T10_proceso" name="T10 · Marcar o quitar favorito" isExecutable="false">
+    <bpmn:laneSet id="T10_carriles">
+      <bpmn:lane id="T10_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>optimista</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gAccion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>revertir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finError</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T10_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>insert</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>delete</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gAceptado</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T10_carril_bd" name="BD">
+          <bpmn:flowNodeRef>rls</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Pulsa la estrella">
+      <bpmn:outgoing>T10_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="optimista" name="Cambiar la estrella al instante (optimista)">
+      <bpmn:incoming>T10_f1</bpmn:incoming>
+      <bpmn:outgoing>T10_f2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gAccion" name="¿Marcar o quitar?">
+      <bpmn:incoming>T10_f2</bpmn:incoming>
+      <bpmn:outgoing>T10_f3</bpmn:outgoing>
+      <bpmn:outgoing>T10_f4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="insert" name="PostgREST: insert en user_favorites">
+      <bpmn:incoming>T10_f3</bpmn:incoming>
+      <bpmn:outgoing>T10_f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="delete" name="PostgREST: delete en user_favorites">
+      <bpmn:incoming>T10_f4</bpmn:incoming>
+      <bpmn:outgoing>T10_f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="rls" name="RLS: solo propios y de recursos visibles; índice único">
+      <bpmn:incoming>T10_f5</bpmn:incoming>
+      <bpmn:incoming>T10_f6</bpmn:incoming>
+      <bpmn:outgoing>T10_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gAceptado" name="¿Aceptado?">
+      <bpmn:incoming>T10_f7</bpmn:incoming>
+      <bpmn:outgoing>T10_f8</bpmn:outgoing>
+      <bpmn:outgoing>T10_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="revertir" name="Revertir la estrella y avisar">
+      <bpmn:incoming>T10_f8</bpmn:incoming>
+      <bpmn:outgoing>T10_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finError" name="Sin cambios">
+      <bpmn:incoming>T10_f9</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finError_def" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="fin" name="Favorito actualizado">
+      <bpmn:incoming>T10_f10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T10_f1" sourceRef="inicio" targetRef="optimista" />
+    <bpmn:sequenceFlow id="T10_f2" sourceRef="optimista" targetRef="gAccion" />
+    <bpmn:sequenceFlow id="T10_f3" sourceRef="gAccion" targetRef="insert" name="Marcar" />
+    <bpmn:sequenceFlow id="T10_f4" sourceRef="gAccion" targetRef="delete" name="Quitar" />
+    <bpmn:sequenceFlow id="T10_f5" sourceRef="insert" targetRef="rls" />
+    <bpmn:sequenceFlow id="T10_f6" sourceRef="delete" targetRef="rls" />
+    <bpmn:sequenceFlow id="T10_f7" sourceRef="rls" targetRef="gAceptado" />
+    <bpmn:sequenceFlow id="T10_f8" sourceRef="gAceptado" targetRef="revertir" name="No" />
+    <bpmn:sequenceFlow id="T10_f9" sourceRef="revertir" targetRef="finError" />
+    <bpmn:sequenceFlow id="T10_f10" sourceRef="gAceptado" targetRef="fin" name="Sí" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T10_diagrama" name="T10 · Marcar o quitar favorito">
+    <bpmndi:BPMNPlane id="T10_plano" bpmnElement="T10_colaboracion">
+      <bpmndi:BPMNShape id="T10_pool_di" bpmnElement="T10_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1520" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T10_carril_front_di" bpmnElement="T10_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T10_carril_servicio_di" bpmnElement="T10_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T10_carril_bd_di" bpmnElement="T10_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="optimista_di" bpmnElement="optimista">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gAccion_di" bpmnElement="gAccion" isMarkerVisible="true">
+        <dc:Bounds x="530" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="insert_di" bpmnElement="insert">
+        <dc:Bounds x="665" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="delete_di" bpmnElement="delete">
+        <dc:Bounds x="665" y="411" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rls_di" bpmnElement="rls">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gAceptado_di" bpmnElement="gAceptado" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="revertir_di" bpmnElement="revertir">
+        <dc:Bounds x="1190" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finError_di" bpmnElement="finError">
+        <dc:Bounds x="1412" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1237" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T10_f1_di" bpmnElement="T10_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f2_di" bpmnElement="T10_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="530" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f3_di" bpmnElement="T10_f3">
+        <di:waypoint x="580" y="117" />
+        <di:waypoint x="623" y="117" />
+        <di:waypoint x="623" y="347" />
+        <di:waypoint x="665" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="629" y="329" width="36" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f4_di" bpmnElement="T10_f4">
+        <di:waypoint x="580" y="117" />
+        <di:waypoint x="623" y="117" />
+        <di:waypoint x="623" y="447" />
+        <di:waypoint x="665" y="447" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="629" y="429" width="36" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f5_di" bpmnElement="T10_f5">
+        <di:waypoint x="795" y="347" />
+        <di:waypoint x="818" y="347" />
+        <di:waypoint x="818" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f6_di" bpmnElement="T10_f6">
+        <di:waypoint x="795" y="447" />
+        <di:waypoint x="818" y="447" />
+        <di:waypoint x="818" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f7_di" bpmnElement="T10_f7">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1013" y="577" />
+        <di:waypoint x="1013" y="347" />
+        <di:waypoint x="1055" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f8_di" bpmnElement="T10_f8">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1148" y="347" />
+        <di:waypoint x="1148" y="217" />
+        <di:waypoint x="1190" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f9_di" bpmnElement="T10_f9">
+        <di:waypoint x="1320" y="217" />
+        <di:waypoint x="1412" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T10_f10_di" bpmnElement="T10_f10">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1171" y="347" />
+        <di:waypoint x="1171" y="117" />
+        <di:waypoint x="1237" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1177" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

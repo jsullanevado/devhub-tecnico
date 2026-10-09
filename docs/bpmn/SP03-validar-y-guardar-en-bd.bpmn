@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP03_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP03_colaboracion">
+    <bpmn:participant id="SP03_pool" name="SP03 · Validar y guardar en BD" processRef="SP03_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP03_proceso" name="SP03 · Validar y guardar en BD" isExecutable="false">
+    <bpmn:documentation>Subproceso de T04. Reglas que aplica PostgreSQL a toda escritura de recursos.</bpmn:documentation>
+    <bpmn:laneSet id="SP03_carriles">
+      <bpmn:lane id="SP03_carril_front" name="Front">
+      </bpmn:lane>
+      <bpmn:lane id="SP03_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP03_carril_bd" name="BD">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>rls</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gPermitido</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finPermiso</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>columnas</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>trigger</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>check</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gCumple</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finDato</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>guardar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Petición de escritura">
+      <bpmn:outgoing>SP03_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="rls" name="RLS: INSERT a nombre propio / UPDATE si propietario o superadmin">
+      <bpmn:incoming>SP03_f1</bpmn:incoming>
+      <bpmn:outgoing>SP03_f2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gPermitido" name="¿Permitido?">
+      <bpmn:incoming>SP03_f2</bpmn:incoming>
+      <bpmn:outgoing>SP03_f3</bpmn:outgoing>
+      <bpmn:outgoing>SP03_f4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finPermiso" name="42501 sin permisos">
+      <bpmn:incoming>SP03_f3</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finPermiso_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="columnas" name="Privilegios por columna (owner_id, fechas y contadores no escribibles)">
+      <bpmn:incoming>SP03_f4</bpmn:incoming>
+      <bpmn:outgoing>SP03_f5</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="trigger" name="Trigger: normalizar etiquetas, search_vector y updated_at">
+      <bpmn:incoming>SP03_f5</bpmn:incoming>
+      <bpmn:outgoing>SP03_f6</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="check" name="CHECK: longitudes, categorías; «Resuelta» exige solución">
+      <bpmn:incoming>SP03_f6</bpmn:incoming>
+      <bpmn:outgoing>SP03_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gCumple" name="¿Cumple?">
+      <bpmn:incoming>SP03_f7</bpmn:incoming>
+      <bpmn:outgoing>SP03_f8</bpmn:outgoing>
+      <bpmn:outgoing>SP03_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finDato" name="23514 dato inválido">
+      <bpmn:incoming>SP03_f8</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finDato_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="guardar" name="Guardar la fila">
+      <bpmn:incoming>SP03_f9</bpmn:incoming>
+      <bpmn:outgoing>SP03_f10</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="fin" name="Fila devuelta al servicio">
+      <bpmn:incoming>SP03_f10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP03_f1" sourceRef="inicio" targetRef="rls" />
+    <bpmn:sequenceFlow id="SP03_f2" sourceRef="rls" targetRef="gPermitido" />
+    <bpmn:sequenceFlow id="SP03_f3" sourceRef="gPermitido" targetRef="finPermiso" name="No" />
+    <bpmn:sequenceFlow id="SP03_f4" sourceRef="gPermitido" targetRef="columnas" name="Sí" />
+    <bpmn:sequenceFlow id="SP03_f5" sourceRef="columnas" targetRef="trigger" />
+    <bpmn:sequenceFlow id="SP03_f6" sourceRef="trigger" targetRef="check" />
+    <bpmn:sequenceFlow id="SP03_f7" sourceRef="check" targetRef="gCumple" />
+    <bpmn:sequenceFlow id="SP03_f8" sourceRef="gCumple" targetRef="finDato" name="No" />
+    <bpmn:sequenceFlow id="SP03_f9" sourceRef="gCumple" targetRef="guardar" name="Sí" />
+    <bpmn:sequenceFlow id="SP03_f10" sourceRef="guardar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP03_diagrama" name="SP03 · Validar y guardar en BD">
+    <bpmndi:BPMNPlane id="SP03_plano" bpmnElement="SP03_colaboracion">
+      <bpmndi:BPMNShape id="SP03_pool_di" bpmnElement="SP03_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1695" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP03_carril_front_di" bpmnElement="SP03_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1665" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP03_carril_servicio_di" bpmnElement="SP03_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1665" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP03_carril_bd_di" bpmnElement="SP03_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1665" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rls_di" bpmnElement="rls">
+        <dc:Bounds x="315" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gPermitido_di" bpmnElement="gPermitido" isMarkerVisible="true">
+        <dc:Bounds x="530" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finPermiso_di" bpmnElement="finPermiso">
+        <dc:Bounds x="712" y="659" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="columnas_di" bpmnElement="columnas">
+        <dc:Bounds x="665" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="trigger_di" bpmnElement="trigger">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="check_di" bpmnElement="check">
+        <dc:Bounds x="1015" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gCumple_di" bpmnElement="gCumple" isMarkerVisible="true">
+        <dc:Bounds x="1230" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finDato_di" bpmnElement="finDato">
+        <dc:Bounds x="1412" y="659" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="guardar_di" bpmnElement="guardar">
+        <dc:Bounds x="1365" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1587" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SP03_f1_di" bpmnElement="SP03_f1">
+        <di:waypoint x="223" y="577" />
+        <di:waypoint x="315" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f2_di" bpmnElement="SP03_f2">
+        <di:waypoint x="445" y="577" />
+        <di:waypoint x="530" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f3_di" bpmnElement="SP03_f3">
+        <di:waypoint x="555" y="602" />
+        <di:waypoint x="555" y="677" />
+        <di:waypoint x="712" y="677" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="659" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f4_di" bpmnElement="SP03_f4">
+        <di:waypoint x="580" y="577" />
+        <di:waypoint x="665" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="629" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f5_di" bpmnElement="SP03_f5">
+        <di:waypoint x="795" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f6_di" bpmnElement="SP03_f6">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1015" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f7_di" bpmnElement="SP03_f7">
+        <di:waypoint x="1145" y="577" />
+        <di:waypoint x="1230" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f8_di" bpmnElement="SP03_f8">
+        <di:waypoint x="1255" y="602" />
+        <di:waypoint x="1255" y="677" />
+        <di:waypoint x="1412" y="677" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1261" y="659" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f9_di" bpmnElement="SP03_f9">
+        <di:waypoint x="1280" y="577" />
+        <di:waypoint x="1365" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1329" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP03_f10_di" bpmnElement="SP03_f10">
+        <di:waypoint x="1495" y="577" />
+        <di:waypoint x="1587" y="577" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

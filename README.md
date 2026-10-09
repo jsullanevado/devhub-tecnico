@@ -6,6 +6,7 @@ manuales y documentos, y un catálogo de **servicios REST/SOAP/DataPower** con s
 - **Producción:** https://devhub-tecnico.netlify.app
 - **Código:** https://github.com/jsullanevado/devhub-tecnico
 - **Manual de usuario:** [docs/manual-usuario.md](docs/manual-usuario.md)
+- **Diagramas BPMN por transacción (Front · Servicio · BD):** [docs/bpmn/](docs/bpmn/README.md)
 
 Este documento es para quien instala, despliega o mantiene la aplicación.
 
@@ -185,7 +186,8 @@ supabase/
   migrations/  SQL en orden de ejecución
   tests/       validación y pruebas de RLS
 e2e/           pruebas Playwright y Supabase simulado
-docs/          manual de usuario
+docs/          manual de usuario y diagramas BPMN (docs/bpmn, generados con npm run bpmn)
+scripts/bpmn/  generador de los diagramas: flujos.mjs (qué) y motor.mjs (cómo se dibujan)
 ```
 
 Para añadir un módulo de contenido: tabla + RLS + rama en `private.resource_before_write`

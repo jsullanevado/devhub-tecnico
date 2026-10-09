@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T07_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T07_colaboracion">
+    <bpmn:participant id="T07_pool" name="T07 · Ver o descargar manual" processRef="T07_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T07_proceso" name="T07 · Ver o descargar manual" isExecutable="false">
+    <bpmn:laneSet id="T07_carriles">
+      <bpmn:lane id="T07_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>elegir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gAccion</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>mostrar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finVista</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gContada</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gUnir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>abrir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finDescarga</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T07_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>obtener</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>descargarBlob</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>firmar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>contar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T07_carril_bd" name="BD">
+          <bpmn:flowNodeRef>rls</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>politica</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>sumar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Abre la ficha del manual">
+      <bpmn:outgoing>T07_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="obtener" name="PostgREST: obtener el manual">
+      <bpmn:incoming>T07_f1</bpmn:incoming>
+      <bpmn:outgoing>T07_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="rls" name="RLS SELECT: público, propio o superadmin">
+      <bpmn:incoming>T07_f2</bpmn:incoming>
+      <bpmn:outgoing>T07_f3</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="elegir" name="Elegir acción">
+      <bpmn:incoming>T07_f3</bpmn:incoming>
+      <bpmn:outgoing>T07_f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="gAccion" name="¿Vista previa o descarga?">
+      <bpmn:incoming>T07_f4</bpmn:incoming>
+      <bpmn:outgoing>T07_f5</bpmn:outgoing>
+      <bpmn:outgoing>T07_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="descargarBlob" name="Storage: descargar con la sesión del usuario">
+      <bpmn:incoming>T07_f5</bpmn:incoming>
+      <bpmn:outgoing>T07_f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="politica" name="Política Storage SELECT">
+      <bpmn:incoming>T07_f6</bpmn:incoming>
+      <bpmn:outgoing>T07_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:task id="mostrar" name="Mostrar vista previa (no suma descargas)">
+      <bpmn:incoming>T07_f7</bpmn:incoming>
+      <bpmn:outgoing>T07_f8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finVista" name="Vista previa mostrada">
+      <bpmn:incoming>T07_f8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="firmar" name="Crear URL firmada (60 s, nombre original)">
+      <bpmn:incoming>T07_f9</bpmn:incoming>
+      <bpmn:outgoing>T07_f10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gContada" name="¿Ya contada en los últimos 5 min?">
+      <bpmn:incoming>T07_f10</bpmn:incoming>
+      <bpmn:outgoing>T07_f11</bpmn:outgoing>
+      <bpmn:outgoing>T07_f12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="contar" name="RPC register_manual_download">
+      <bpmn:incoming>T07_f11</bpmn:incoming>
+      <bpmn:outgoing>T07_f13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="sumar" name="Sumar 1 (SECURITY DEFINER, valida visibilidad)">
+      <bpmn:incoming>T07_f13</bpmn:incoming>
+      <bpmn:outgoing>T07_f14</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gUnir" name="">
+      <bpmn:incoming>T07_f12</bpmn:incoming>
+      <bpmn:incoming>T07_f14</bpmn:incoming>
+      <bpmn:outgoing>T07_f15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="abrir" name="Abrir la descarga">
+      <bpmn:incoming>T07_f15</bpmn:incoming>
+      <bpmn:outgoing>T07_f16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finDescarga" name="Archivo descargado">
+      <bpmn:incoming>T07_f16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T07_f1" sourceRef="inicio" targetRef="obtener" />
+    <bpmn:sequenceFlow id="T07_f2" sourceRef="obtener" targetRef="rls" />
+    <bpmn:sequenceFlow id="T07_f3" sourceRef="rls" targetRef="elegir" />
+    <bpmn:sequenceFlow id="T07_f4" sourceRef="elegir" targetRef="gAccion" />
+    <bpmn:sequenceFlow id="T07_f5" sourceRef="gAccion" targetRef="descargarBlob" name="Vista previa" />
+    <bpmn:sequenceFlow id="T07_f6" sourceRef="descargarBlob" targetRef="politica" />
+    <bpmn:sequenceFlow id="T07_f7" sourceRef="politica" targetRef="mostrar" />
+    <bpmn:sequenceFlow id="T07_f8" sourceRef="mostrar" targetRef="finVista" />
+    <bpmn:sequenceFlow id="T07_f9" sourceRef="gAccion" targetRef="firmar" name="Descargar" />
+    <bpmn:sequenceFlow id="T07_f10" sourceRef="firmar" targetRef="gContada" />
+    <bpmn:sequenceFlow id="T07_f11" sourceRef="gContada" targetRef="contar" name="No" />
+    <bpmn:sequenceFlow id="T07_f12" sourceRef="gContada" targetRef="gUnir" name="Sí" />
+    <bpmn:sequenceFlow id="T07_f13" sourceRef="contar" targetRef="sumar" />
+    <bpmn:sequenceFlow id="T07_f14" sourceRef="sumar" targetRef="gUnir" />
+    <bpmn:sequenceFlow id="T07_f15" sourceRef="gUnir" targetRef="abrir" />
+    <bpmn:sequenceFlow id="T07_f16" sourceRef="abrir" targetRef="finDescarga" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T07_diagrama" name="T07 · Ver o descargar manual">
+    <bpmndi:BPMNPlane id="T07_plano" bpmnElement="T07_colaboracion">
+      <bpmndi:BPMNShape id="T07_pool_di" bpmnElement="T07_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2220" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T07_carril_front_di" bpmnElement="T07_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T07_carril_servicio_di" bpmnElement="T07_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T07_carril_bd_di" bpmnElement="T07_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2190" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="obtener_di" bpmnElement="obtener">
+        <dc:Bounds x="315" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rls_di" bpmnElement="rls">
+        <dc:Bounds x="490" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="elegir_di" bpmnElement="elegir">
+        <dc:Bounds x="665" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gAccion_di" bpmnElement="gAccion" isMarkerVisible="true">
+        <dc:Bounds x="880" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="descargarBlob_di" bpmnElement="descargarBlob">
+        <dc:Bounds x="1015" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="politica_di" bpmnElement="politica">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mostrar_di" bpmnElement="mostrar">
+        <dc:Bounds x="1365" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finVista_di" bpmnElement="finVista">
+        <dc:Bounds x="1587" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="firmar_di" bpmnElement="firmar">
+        <dc:Bounds x="1015" y="411" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gContada_di" bpmnElement="gContada" isMarkerVisible="true">
+        <dc:Bounds x="1230" y="192" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="contar_di" bpmnElement="contar">
+        <dc:Bounds x="1365" y="411" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sumar_di" bpmnElement="sumar">
+        <dc:Bounds x="1540" y="641" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gUnir_di" bpmnElement="gUnir" isMarkerVisible="true">
+        <dc:Bounds x="1755" y="192" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="abrir_di" bpmnElement="abrir">
+        <dc:Bounds x="1890" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finDescarga_di" bpmnElement="finDescarga">
+        <dc:Bounds x="2112" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T07_f1_di" bpmnElement="T07_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="269" y="117" />
+        <di:waypoint x="269" y="347" />
+        <di:waypoint x="315" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f2_di" bpmnElement="T07_f2">
+        <di:waypoint x="445" y="347" />
+        <di:waypoint x="468" y="347" />
+        <di:waypoint x="468" y="577" />
+        <di:waypoint x="490" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f3_di" bpmnElement="T07_f3">
+        <di:waypoint x="620" y="577" />
+        <di:waypoint x="643" y="577" />
+        <di:waypoint x="643" y="117" />
+        <di:waypoint x="665" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f4_di" bpmnElement="T07_f4">
+        <di:waypoint x="795" y="117" />
+        <di:waypoint x="880" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f5_di" bpmnElement="T07_f5">
+        <di:waypoint x="930" y="117" />
+        <di:waypoint x="973" y="117" />
+        <di:waypoint x="973" y="347" />
+        <di:waypoint x="1015" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="979" y="329" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f6_di" bpmnElement="T07_f6">
+        <di:waypoint x="1145" y="347" />
+        <di:waypoint x="1168" y="347" />
+        <di:waypoint x="1168" y="577" />
+        <di:waypoint x="1190" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f7_di" bpmnElement="T07_f7">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1343" y="577" />
+        <di:waypoint x="1343" y="117" />
+        <di:waypoint x="1365" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f8_di" bpmnElement="T07_f8">
+        <di:waypoint x="1495" y="117" />
+        <di:waypoint x="1587" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f9_di" bpmnElement="T07_f9">
+        <di:waypoint x="930" y="117" />
+        <di:waypoint x="973" y="117" />
+        <di:waypoint x="973" y="447" />
+        <di:waypoint x="1015" y="447" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="979" y="429" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f10_di" bpmnElement="T07_f10">
+        <di:waypoint x="1145" y="447" />
+        <di:waypoint x="1188" y="447" />
+        <di:waypoint x="1188" y="217" />
+        <di:waypoint x="1230" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f11_di" bpmnElement="T07_f11">
+        <di:waypoint x="1280" y="217" />
+        <di:waypoint x="1323" y="217" />
+        <di:waypoint x="1323" y="447" />
+        <di:waypoint x="1365" y="447" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1329" y="429" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f12_di" bpmnElement="T07_f12">
+        <di:waypoint x="1280" y="217" />
+        <di:waypoint x="1755" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1524" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f13_di" bpmnElement="T07_f13">
+        <di:waypoint x="1495" y="447" />
+        <di:waypoint x="1518" y="447" />
+        <di:waypoint x="1518" y="677" />
+        <di:waypoint x="1540" y="677" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f14_di" bpmnElement="T07_f14">
+        <di:waypoint x="1670" y="677" />
+        <di:waypoint x="1713" y="677" />
+        <di:waypoint x="1713" y="217" />
+        <di:waypoint x="1755" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f15_di" bpmnElement="T07_f15">
+        <di:waypoint x="1805" y="217" />
+        <di:waypoint x="1890" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T07_f16_di" bpmnElement="T07_f16">
+        <di:waypoint x="2020" y="217" />
+        <di:waypoint x="2112" y="217" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

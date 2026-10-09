@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T09_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T09_colaboracion">
+    <bpmn:participant id="T09_pool" name="T09 · Búsqueda global (Ctrl+K)" processRef="T09_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T09_proceso" name="T09 · Búsqueda global (Ctrl+K)" isExecutable="false">
+    <bpmn:laneSet id="T09_carriles">
+      <bpmn:lane id="T09_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>escribir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>esperar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gLargo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>ayuda</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>mostrar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>elegir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T09_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>rpc</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T09_carril_bd" name="BD">
+          <bpmn:flowNodeRef>consulta</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>unir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>ordenar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Pulsa Ctrl+K o /">
+      <bpmn:outgoing>T09_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="escribir" name="Escribir el término">
+      <bpmn:incoming>T09_f1</bpmn:incoming>
+      <bpmn:incoming>T09_f5</bpmn:incoming>
+      <bpmn:outgoing>T09_f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="esperar" name="Esperar 250 ms sin escribir">
+      <bpmn:incoming>T09_f2</bpmn:incoming>
+      <bpmn:outgoing>T09_f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gLargo" name="¿2 o más caracteres?">
+      <bpmn:incoming>T09_f3</bpmn:incoming>
+      <bpmn:outgoing>T09_f4</bpmn:outgoing>
+      <bpmn:outgoing>T09_f6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="ayuda" name="Mostrar ayuda de sintaxis">
+      <bpmn:incoming>T09_f4</bpmn:incoming>
+      <bpmn:outgoing>T09_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="rpc" name="RPC search_resources (cancela la búsqueda anterior)">
+      <bpmn:incoming>T09_f6</bpmn:incoming>
+      <bpmn:outgoing>T09_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="consulta" name="Consulta web en español sin tildes">
+      <bpmn:incoming>T09_f7</bpmn:incoming>
+      <bpmn:outgoing>T09_f8</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="unir" name="Unir las 5 tablas respetando RLS">
+      <bpmn:incoming>T09_f8</bpmn:incoming>
+      <bpmn:outgoing>T09_f9</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="ordenar" name="Ordenar por relevancia (máx. 20)">
+      <bpmn:incoming>T09_f9</bpmn:incoming>
+      <bpmn:outgoing>T09_f10</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:task id="mostrar" name="Mostrar resultados">
+      <bpmn:incoming>T09_f10</bpmn:incoming>
+      <bpmn:outgoing>T09_f11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:userTask id="elegir" name="Elegir con flechas y Enter">
+      <bpmn:incoming>T09_f11</bpmn:incoming>
+      <bpmn:outgoing>T09_f12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="fin" name="Abre el recurso">
+      <bpmn:incoming>T09_f12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T09_f1" sourceRef="inicio" targetRef="escribir" />
+    <bpmn:sequenceFlow id="T09_f2" sourceRef="escribir" targetRef="esperar" />
+    <bpmn:sequenceFlow id="T09_f3" sourceRef="esperar" targetRef="gLargo" />
+    <bpmn:sequenceFlow id="T09_f4" sourceRef="gLargo" targetRef="ayuda" name="No" />
+    <bpmn:sequenceFlow id="T09_f5" sourceRef="ayuda" targetRef="escribir" />
+    <bpmn:sequenceFlow id="T09_f6" sourceRef="gLargo" targetRef="rpc" name="Sí" />
+    <bpmn:sequenceFlow id="T09_f7" sourceRef="rpc" targetRef="consulta" />
+    <bpmn:sequenceFlow id="T09_f8" sourceRef="consulta" targetRef="unir" />
+    <bpmn:sequenceFlow id="T09_f9" sourceRef="unir" targetRef="ordenar" />
+    <bpmn:sequenceFlow id="T09_f10" sourceRef="ordenar" targetRef="mostrar" />
+    <bpmn:sequenceFlow id="T09_f11" sourceRef="mostrar" targetRef="elegir" />
+    <bpmn:sequenceFlow id="T09_f12" sourceRef="elegir" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T09_diagrama" name="T09 · Búsqueda global (Ctrl+K)">
+    <bpmndi:BPMNPlane id="T09_plano" bpmnElement="T09_colaboracion">
+      <bpmndi:BPMNShape id="T09_pool_di" bpmnElement="T09_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2045" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T09_carril_front_di" bpmnElement="T09_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T09_carril_servicio_di" bpmnElement="T09_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T09_carril_bd_di" bpmnElement="T09_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="escribir_di" bpmnElement="escribir">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="esperar_di" bpmnElement="esperar">
+        <dc:Bounds x="490" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gLargo_di" bpmnElement="gLargo" isMarkerVisible="true">
+        <dc:Bounds x="705" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ayuda_di" bpmnElement="ayuda">
+        <dc:Bounds x="840" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="rpc_di" bpmnElement="rpc">
+        <dc:Bounds x="840" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="consulta_di" bpmnElement="consulta">
+        <dc:Bounds x="1015" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="unir_di" bpmnElement="unir">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ordenar_di" bpmnElement="ordenar">
+        <dc:Bounds x="1365" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mostrar_di" bpmnElement="mostrar">
+        <dc:Bounds x="1540" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="elegir_di" bpmnElement="elegir">
+        <dc:Bounds x="1715" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1937" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T09_f1_di" bpmnElement="T09_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f2_di" bpmnElement="T09_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f3_di" bpmnElement="T09_f3">
+        <di:waypoint x="620" y="117" />
+        <di:waypoint x="705" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f4_di" bpmnElement="T09_f4">
+        <di:waypoint x="730" y="142" />
+        <di:waypoint x="730" y="217" />
+        <di:waypoint x="840" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="736" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f5_di" bpmnElement="T09_f5">
+        <di:waypoint x="905" y="253" />
+        <di:waypoint x="905" y="263" />
+        <di:waypoint x="380" y="263" />
+        <di:waypoint x="380" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f6_di" bpmnElement="T09_f6">
+        <di:waypoint x="755" y="117" />
+        <di:waypoint x="798" y="117" />
+        <di:waypoint x="798" y="347" />
+        <di:waypoint x="840" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="329" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f7_di" bpmnElement="T09_f7">
+        <di:waypoint x="970" y="347" />
+        <di:waypoint x="993" y="347" />
+        <di:waypoint x="993" y="577" />
+        <di:waypoint x="1015" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f8_di" bpmnElement="T09_f8">
+        <di:waypoint x="1145" y="577" />
+        <di:waypoint x="1190" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f9_di" bpmnElement="T09_f9">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1365" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f10_di" bpmnElement="T09_f10">
+        <di:waypoint x="1495" y="577" />
+        <di:waypoint x="1518" y="577" />
+        <di:waypoint x="1518" y="117" />
+        <di:waypoint x="1540" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f11_di" bpmnElement="T09_f11">
+        <di:waypoint x="1670" y="117" />
+        <di:waypoint x="1715" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T09_f12_di" bpmnElement="T09_f12">
+        <di:waypoint x="1845" y="117" />
+        <di:waypoint x="1937" y="117" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

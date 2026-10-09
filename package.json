@@ -9,7 +9,8 @@
     "test": "ng test",
     "start:e2e": "ng serve --configuration e2e --port 4300",
     "e2e": "playwright test",
-    "format": "prettier --write \"src/**/*.{ts,html,css}\" \"e2e/**/*.ts\""
+    "format": "prettier --write \"src/**/*.{ts,html,css}\" \"e2e/**/*.ts\"",
+    "bpmn": "node scripts/bpmn/generar-bpmn.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.9",

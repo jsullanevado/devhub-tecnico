@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T03_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T03_colaboracion">
+    <bpmn:participant id="T03_pool" name="T03 · Recuperar contraseña" processRef="T03_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T03_proceso" name="T03 · Recuperar contraseña" isExecutable="false">
+    <bpmn:laneSet id="T03_carriles">
+      <bpmn:lane id="T03_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>correo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>confirmar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>abre</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>caducado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finSin</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>nueva</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>entrar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T03_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>reset</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>enviar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>validar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gEnlace</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>update</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T03_carril_bd" name="BD">
+          <bpmn:flowNodeRef>guardar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Pulsa «¿Olvidaste tu contraseña?»">
+      <bpmn:outgoing>T03_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="correo" name="Ingresar el correo">
+      <bpmn:incoming>T03_f1</bpmn:incoming>
+      <bpmn:outgoing>T03_f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="reset" name="Auth: resetPasswordForEmail (vuelve a /auth/reset-password)">
+      <bpmn:incoming>T03_f2</bpmn:incoming>
+      <bpmn:outgoing>T03_f3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="enviar" name="Enviar correo con enlace de un solo uso">
+      <bpmn:incoming>T03_f3</bpmn:incoming>
+      <bpmn:outgoing>T03_f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="confirmar" name="Mostrar confirmación del envío">
+      <bpmn:incoming>T03_f4</bpmn:incoming>
+      <bpmn:outgoing>T03_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="abre" name="Abre el enlace del correo">
+      <bpmn:incoming>T03_f5</bpmn:incoming>
+      <bpmn:outgoing>T03_f6</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="abre_def" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="validar" name="Validar el enlace (evento PASSWORD_RECOVERY)">
+      <bpmn:incoming>T03_f6</bpmn:incoming>
+      <bpmn:outgoing>T03_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gEnlace" name="¿Enlace válido?">
+      <bpmn:incoming>T03_f7</bpmn:incoming>
+      <bpmn:outgoing>T03_f8</bpmn:outgoing>
+      <bpmn:outgoing>T03_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="caducado" name="Mostrar «enlace caducado» y ofrecer pedir otro">
+      <bpmn:incoming>T03_f8</bpmn:incoming>
+      <bpmn:outgoing>T03_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finSin" name="Sin cambios">
+      <bpmn:incoming>T03_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="nueva" name="Ingresar la nueva contraseña (mín. 8)">
+      <bpmn:incoming>T03_f10</bpmn:incoming>
+      <bpmn:outgoing>T03_f11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="update" name="Auth: updateUser (contraseña)">
+      <bpmn:incoming>T03_f11</bpmn:incoming>
+      <bpmn:outgoing>T03_f12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="guardar" name="Actualizar la credencial en auth.users">
+      <bpmn:incoming>T03_f12</bpmn:incoming>
+      <bpmn:outgoing>T03_f13</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:task id="entrar" name="Confirmar y entrar a la app">
+      <bpmn:incoming>T03_f13</bpmn:incoming>
+      <bpmn:outgoing>T03_f14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="fin" name="Contraseña cambiada">
+      <bpmn:incoming>T03_f14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T03_f1" sourceRef="inicio" targetRef="correo" />
+    <bpmn:sequenceFlow id="T03_f2" sourceRef="correo" targetRef="reset" />
+    <bpmn:sequenceFlow id="T03_f3" sourceRef="reset" targetRef="enviar" />
+    <bpmn:sequenceFlow id="T03_f4" sourceRef="enviar" targetRef="confirmar" />
+    <bpmn:sequenceFlow id="T03_f5" sourceRef="confirmar" targetRef="abre" />
+    <bpmn:sequenceFlow id="T03_f6" sourceRef="abre" targetRef="validar" />
+    <bpmn:sequenceFlow id="T03_f7" sourceRef="validar" targetRef="gEnlace" />
+    <bpmn:sequenceFlow id="T03_f8" sourceRef="gEnlace" targetRef="caducado" name="No" />
+    <bpmn:sequenceFlow id="T03_f9" sourceRef="caducado" targetRef="finSin" />
+    <bpmn:sequenceFlow id="T03_f10" sourceRef="gEnlace" targetRef="nueva" name="Sí" />
+    <bpmn:sequenceFlow id="T03_f11" sourceRef="nueva" targetRef="update" />
+    <bpmn:sequenceFlow id="T03_f12" sourceRef="update" targetRef="guardar" />
+    <bpmn:sequenceFlow id="T03_f13" sourceRef="guardar" targetRef="entrar" />
+    <bpmn:sequenceFlow id="T03_f14" sourceRef="entrar" targetRef="fin" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T03_diagrama" name="T03 · Recuperar contraseña">
+    <bpmndi:BPMNPlane id="T03_plano" bpmnElement="T03_colaboracion">
+      <bpmndi:BPMNShape id="T03_pool_di" bpmnElement="T03_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2395" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T03_carril_front_di" bpmnElement="T03_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2365" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T03_carril_servicio_di" bpmnElement="T03_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2365" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T03_carril_bd_di" bpmnElement="T03_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2365" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="correo_di" bpmnElement="correo">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="reset_di" bpmnElement="reset">
+        <dc:Bounds x="490" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="enviar_di" bpmnElement="enviar">
+        <dc:Bounds x="665" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="confirmar_di" bpmnElement="confirmar">
+        <dc:Bounds x="840" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="abre_di" bpmnElement="abre">
+        <dc:Bounds x="1062" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="validar_di" bpmnElement="validar">
+        <dc:Bounds x="1190" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gEnlace_di" bpmnElement="gEnlace" isMarkerVisible="true">
+        <dc:Bounds x="1405" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="caducado_di" bpmnElement="caducado">
+        <dc:Bounds x="1540" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finSin_di" bpmnElement="finSin">
+        <dc:Bounds x="1762" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="nueva_di" bpmnElement="nueva">
+        <dc:Bounds x="1540" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="update_di" bpmnElement="update">
+        <dc:Bounds x="1715" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="guardar_di" bpmnElement="guardar">
+        <dc:Bounds x="1890" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="entrar_di" bpmnElement="entrar">
+        <dc:Bounds x="2065" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="2287" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="T03_f1_di" bpmnElement="T03_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f2_di" bpmnElement="T03_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="468" y="117" />
+        <di:waypoint x="468" y="347" />
+        <di:waypoint x="490" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f3_di" bpmnElement="T03_f3">
+        <di:waypoint x="620" y="347" />
+        <di:waypoint x="665" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f4_di" bpmnElement="T03_f4">
+        <di:waypoint x="795" y="347" />
+        <di:waypoint x="818" y="347" />
+        <di:waypoint x="818" y="117" />
+        <di:waypoint x="840" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f5_di" bpmnElement="T03_f5">
+        <di:waypoint x="970" y="117" />
+        <di:waypoint x="1062" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f6_di" bpmnElement="T03_f6">
+        <di:waypoint x="1098" y="117" />
+        <di:waypoint x="1144" y="117" />
+        <di:waypoint x="1144" y="347" />
+        <di:waypoint x="1190" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f7_di" bpmnElement="T03_f7">
+        <di:waypoint x="1320" y="347" />
+        <di:waypoint x="1405" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f8_di" bpmnElement="T03_f8">
+        <di:waypoint x="1455" y="347" />
+        <di:waypoint x="1498" y="347" />
+        <di:waypoint x="1498" y="217" />
+        <di:waypoint x="1540" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1504" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f9_di" bpmnElement="T03_f9">
+        <di:waypoint x="1670" y="217" />
+        <di:waypoint x="1762" y="217" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f10_di" bpmnElement="T03_f10">
+        <di:waypoint x="1455" y="347" />
+        <di:waypoint x="1498" y="347" />
+        <di:waypoint x="1498" y="117" />
+        <di:waypoint x="1540" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1504" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f11_di" bpmnElement="T03_f11">
+        <di:waypoint x="1670" y="117" />
+        <di:waypoint x="1693" y="117" />
+        <di:waypoint x="1693" y="347" />
+        <di:waypoint x="1715" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f12_di" bpmnElement="T03_f12">
+        <di:waypoint x="1845" y="347" />
+        <di:waypoint x="1868" y="347" />
+        <di:waypoint x="1868" y="577" />
+        <di:waypoint x="1890" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f13_di" bpmnElement="T03_f13">
+        <di:waypoint x="2020" y="577" />
+        <di:waypoint x="2043" y="577" />
+        <di:waypoint x="2043" y="117" />
+        <di:waypoint x="2065" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T03_f14_di" bpmnElement="T03_f14">
+        <di:waypoint x="2195" y="117" />
+        <di:waypoint x="2287" y="117" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

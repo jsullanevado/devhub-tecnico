@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="T01_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="T01_colaboracion">
+    <bpmn:participant id="T01_pool" name="T01 · Registro de usuario" processRef="T01_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="T01_proceso" name="T01 · Registro de usuario" isExecutable="false">
+    <bpmn:documentation>Alta de una cuenta nueva con correo y contraseña. La cuenta queda pendiente hasta confirmar el correo.</bpmn:documentation>
+    <bpmn:laneSet id="T01_carriles">
+      <bpmn:lane id="T01_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>completar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>validar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gValido</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>marcar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>mostrarError</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finError</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>avisar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T01_carril_servicio" name="Servicio">
+          <bpmn:flowNodeRef>signUp</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gAceptado</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>correo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="T01_carril_bd" name="BD">
+          <bpmn:flowNodeRef>insertarUsuario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>perfil</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Abre «Regístrate»">
+      <bpmn:outgoing>T01_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="completar" name="Completar usuario, nombre, correo y contraseña">
+      <bpmn:incoming>T01_f1</bpmn:incoming>
+      <bpmn:incoming>T01_f5</bpmn:incoming>
+      <bpmn:outgoing>T01_f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="validar" name="Validar formulario (formato y confirmación)">
+      <bpmn:incoming>T01_f2</bpmn:incoming>
+      <bpmn:outgoing>T01_f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gValido" name="¿Datos válidos?">
+      <bpmn:incoming>T01_f3</bpmn:incoming>
+      <bpmn:outgoing>T01_f4</bpmn:outgoing>
+      <bpmn:outgoing>T01_f6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="marcar" name="Marcar errores en los campos">
+      <bpmn:incoming>T01_f4</bpmn:incoming>
+      <bpmn:outgoing>T01_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="signUp" name="Auth: signUp (correo, contraseña y metadatos)">
+      <bpmn:incoming>T01_f6</bpmn:incoming>
+      <bpmn:outgoing>T01_f7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="gAceptado" name="¿Aceptado?">
+      <bpmn:incoming>T01_f7</bpmn:incoming>
+      <bpmn:outgoing>T01_f8</bpmn:outgoing>
+      <bpmn:outgoing>T01_f10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="mostrarError" name="Mostrar error (p. ej. correo ya registrado)">
+      <bpmn:incoming>T01_f8</bpmn:incoming>
+      <bpmn:outgoing>T01_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="finError" name="Registro rechazado">
+      <bpmn:incoming>T01_f9</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finError_def" />
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="insertarUsuario" name="Insertar usuario en auth.users">
+      <bpmn:incoming>T01_f10</bpmn:incoming>
+      <bpmn:outgoing>T01_f11</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:subProcess id="perfil" name="SP01 · Crear perfil (trigger)">
+      <bpmn:documentation>Detalle en SP01-crear-perfil.bpmn</bpmn:documentation>
+      <bpmn:incoming>T01_f11</bpmn:incoming>
+      <bpmn:outgoing>T01_f12</bpmn:outgoing>
+    </bpmn:subProcess>
+    <bpmn:serviceTask id="correo" name="Enviar correo de confirmación">
+      <bpmn:incoming>T01_f12</bpmn:incoming>
+      <bpmn:outgoing>T01_f13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="avisar" name="Mostrar «Revisa tu correo»">
+      <bpmn:incoming>T01_f13</bpmn:incoming>
+      <bpmn:outgoing>T01_f14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="fin" name="Cuenta pendiente de confirmar">
+      <bpmn:incoming>T01_f14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="T01_f1" sourceRef="inicio" targetRef="completar" />
+    <bpmn:sequenceFlow id="T01_f2" sourceRef="completar" targetRef="validar" />
+    <bpmn:sequenceFlow id="T01_f3" sourceRef="validar" targetRef="gValido" />
+    <bpmn:sequenceFlow id="T01_f4" sourceRef="gValido" targetRef="marcar" name="No" />
+    <bpmn:sequenceFlow id="T01_f5" sourceRef="marcar" targetRef="completar" />
+    <bpmn:sequenceFlow id="T01_f6" sourceRef="gValido" targetRef="signUp" name="Sí" />
+    <bpmn:sequenceFlow id="T01_f7" sourceRef="signUp" targetRef="gAceptado" />
+    <bpmn:sequenceFlow id="T01_f8" sourceRef="gAceptado" targetRef="mostrarError" name="Error" />
+    <bpmn:sequenceFlow id="T01_f9" sourceRef="mostrarError" targetRef="finError" />
+    <bpmn:sequenceFlow id="T01_f10" sourceRef="gAceptado" targetRef="insertarUsuario" name="OK" />
+    <bpmn:sequenceFlow id="T01_f11" sourceRef="insertarUsuario" targetRef="perfil" />
+    <bpmn:sequenceFlow id="T01_f12" sourceRef="perfil" targetRef="correo" />
+    <bpmn:sequenceFlow id="T01_f13" sourceRef="correo" targetRef="avisar" />
+    <bpmn:sequenceFlow id="T01_f14" sourceRef="avisar" targetRef="fin" />
+    <bpmn:textAnnotation id="nota1">
+      <bpmn:text>El rol nunca se toma de los datos del cliente: toda cuenta nueva es «user».</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="nota1_asoc" sourceRef="nota1" targetRef="perfil" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="T01_diagrama" name="T01 · Registro de usuario">
+    <bpmndi:BPMNPlane id="T01_plano" bpmnElement="T01_colaboracion">
+      <bpmndi:BPMNShape id="T01_pool_di" bpmnElement="T01_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="2045" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T01_carril_front_di" bpmnElement="T01_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T01_carril_servicio_di" bpmnElement="T01_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="T01_carril_bd_di" bpmnElement="T01_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="2015" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="completar_di" bpmnElement="completar">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="validar_di" bpmnElement="validar">
+        <dc:Bounds x="490" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gValido_di" bpmnElement="gValido" isMarkerVisible="true">
+        <dc:Bounds x="705" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="marcar_di" bpmnElement="marcar">
+        <dc:Bounds x="665" y="181" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="signUp_di" bpmnElement="signUp">
+        <dc:Bounds x="840" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gAceptado_di" bpmnElement="gAceptado" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="322" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mostrarError_di" bpmnElement="mostrarError">
+        <dc:Bounds x="1190" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finError_di" bpmnElement="finError">
+        <dc:Bounds x="1412" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="insertarUsuario_di" bpmnElement="insertarUsuario">
+        <dc:Bounds x="1190" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="perfil_di" bpmnElement="perfil" isExpanded="false">
+        <dc:Bounds x="1365" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="correo_di" bpmnElement="correo">
+        <dc:Bounds x="1540" y="311" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="avisar_di" bpmnElement="avisar">
+        <dc:Bounds x="1715" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1937" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="nota1_di" bpmnElement="nota1">
+        <dc:Bounds x="1685" y="547" width="190" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="T01_f1_di" bpmnElement="T01_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f2_di" bpmnElement="T01_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f3_di" bpmnElement="T01_f3">
+        <di:waypoint x="620" y="117" />
+        <di:waypoint x="705" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f4_di" bpmnElement="T01_f4">
+        <di:waypoint x="730" y="142" />
+        <di:waypoint x="730" y="181" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="736" y="144" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f5_di" bpmnElement="T01_f5">
+        <di:waypoint x="730" y="253" />
+        <di:waypoint x="730" y="263" />
+        <di:waypoint x="380" y="263" />
+        <di:waypoint x="380" y="153" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f6_di" bpmnElement="T01_f6">
+        <di:waypoint x="755" y="117" />
+        <di:waypoint x="798" y="117" />
+        <di:waypoint x="798" y="347" />
+        <di:waypoint x="840" y="347" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="329" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f7_di" bpmnElement="T01_f7">
+        <di:waypoint x="970" y="347" />
+        <di:waypoint x="1055" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f8_di" bpmnElement="T01_f8">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1148" y="347" />
+        <di:waypoint x="1148" y="117" />
+        <di:waypoint x="1190" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f9_di" bpmnElement="T01_f9">
+        <di:waypoint x="1320" y="117" />
+        <di:waypoint x="1412" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f10_di" bpmnElement="T01_f10">
+        <di:waypoint x="1105" y="347" />
+        <di:waypoint x="1148" y="347" />
+        <di:waypoint x="1148" y="577" />
+        <di:waypoint x="1190" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f11_di" bpmnElement="T01_f11">
+        <di:waypoint x="1320" y="577" />
+        <di:waypoint x="1365" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f12_di" bpmnElement="T01_f12">
+        <di:waypoint x="1495" y="577" />
+        <di:waypoint x="1518" y="577" />
+        <di:waypoint x="1518" y="347" />
+        <di:waypoint x="1540" y="347" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f13_di" bpmnElement="T01_f13">
+        <di:waypoint x="1670" y="347" />
+        <di:waypoint x="1693" y="347" />
+        <di:waypoint x="1693" y="117" />
+        <di:waypoint x="1715" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="T01_f14_di" bpmnElement="T01_f14">
+        <di:waypoint x="1845" y="117" />
+        <di:waypoint x="1937" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="nota1_asoc_di" bpmnElement="nota1_asoc">
+        <di:waypoint x="1685" y="577" />
+        <di:waypoint x="1495" y="577" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

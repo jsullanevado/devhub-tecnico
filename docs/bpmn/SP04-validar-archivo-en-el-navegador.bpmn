@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP04_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP04_colaboracion">
+    <bpmn:participant id="SP04_pool" name="SP04 · Validar archivo en el navegador" processRef="SP04_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP04_proceso" name="SP04 · Validar archivo en el navegador" isExecutable="false">
+    <bpmn:documentation>Subproceso de T06. La autoridad final siguen siendo Storage y la BD.</bpmn:documentation>
+    <bpmn:laneSet id="SP04_carriles">
+      <bpmn:lane id="SP04_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>extension</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>tamano</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>mime</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>firma</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gCorrecto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>finRechazo</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="SP04_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP04_carril_bd" name="BD">
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Archivo elegido">
+      <bpmn:outgoing>SP04_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="extension" name="Extensión permitida (PDF, Office, texto, imágenes)">
+      <bpmn:incoming>SP04_f1</bpmn:incoming>
+      <bpmn:outgoing>SP04_f2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="tamano" name="Tamaño entre 1 B y 50 MB">
+      <bpmn:incoming>SP04_f2</bpmn:incoming>
+      <bpmn:outgoing>SP04_f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="mime" name="MIME declarado coincide con la extensión">
+      <bpmn:incoming>SP04_f3</bpmn:incoming>
+      <bpmn:outgoing>SP04_f4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="firma" name="Leer la firma del contenido (magic numbers)">
+      <bpmn:incoming>SP04_f4</bpmn:incoming>
+      <bpmn:outgoing>SP04_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gCorrecto" name="¿Todo correcto?">
+      <bpmn:incoming>SP04_f5</bpmn:incoming>
+      <bpmn:outgoing>SP04_f6</bpmn:outgoing>
+      <bpmn:outgoing>SP04_f7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="finRechazo" name="Archivo rechazado">
+      <bpmn:incoming>SP04_f6</bpmn:incoming>
+      <bpmn:errorEventDefinition id="finRechazo_def" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="fin" name="Archivo válido">
+      <bpmn:incoming>SP04_f7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP04_f1" sourceRef="inicio" targetRef="extension" />
+    <bpmn:sequenceFlow id="SP04_f2" sourceRef="extension" targetRef="tamano" />
+    <bpmn:sequenceFlow id="SP04_f3" sourceRef="tamano" targetRef="mime" />
+    <bpmn:sequenceFlow id="SP04_f4" sourceRef="mime" targetRef="firma" />
+    <bpmn:sequenceFlow id="SP04_f5" sourceRef="firma" targetRef="gCorrecto" />
+    <bpmn:sequenceFlow id="SP04_f6" sourceRef="gCorrecto" targetRef="finRechazo" name="No" />
+    <bpmn:sequenceFlow id="SP04_f7" sourceRef="gCorrecto" targetRef="fin" name="Sí" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP04_diagrama" name="SP04 · Validar archivo en el navegador">
+    <bpmndi:BPMNPlane id="SP04_plano" bpmnElement="SP04_colaboracion">
+      <bpmndi:BPMNShape id="SP04_pool_di" bpmnElement="SP04_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1345" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP04_carril_front_di" bpmnElement="SP04_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP04_carril_servicio_di" bpmnElement="SP04_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP04_carril_bd_di" bpmnElement="SP04_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="extension_di" bpmnElement="extension">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="tamano_di" bpmnElement="tamano">
+        <dc:Bounds x="490" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mime_di" bpmnElement="mime">
+        <dc:Bounds x="665" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="firma_di" bpmnElement="firma">
+        <dc:Bounds x="840" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gCorrecto_di" bpmnElement="gCorrecto" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="finRechazo_di" bpmnElement="finRechazo">
+        <dc:Bounds x="1237" y="199" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1237" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SP04_f1_di" bpmnElement="SP04_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f2_di" bpmnElement="SP04_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f3_di" bpmnElement="SP04_f3">
+        <di:waypoint x="620" y="117" />
+        <di:waypoint x="665" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f4_di" bpmnElement="SP04_f4">
+        <di:waypoint x="795" y="117" />
+        <di:waypoint x="840" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f5_di" bpmnElement="SP04_f5">
+        <di:waypoint x="970" y="117" />
+        <di:waypoint x="1055" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f6_di" bpmnElement="SP04_f6">
+        <di:waypoint x="1080" y="142" />
+        <di:waypoint x="1080" y="217" />
+        <di:waypoint x="1237" y="217" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1086" y="199" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP04_f7_di" bpmnElement="SP04_f7">
+        <di:waypoint x="1105" y="117" />
+        <di:waypoint x="1237" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1177" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

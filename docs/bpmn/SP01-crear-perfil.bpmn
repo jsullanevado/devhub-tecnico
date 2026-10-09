@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP01_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP01_colaboracion">
+    <bpmn:participant id="SP01_pool" name="SP01 · Crear perfil (trigger handle_new_user)" processRef="SP01_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP01_proceso" name="SP01 · Crear perfil (trigger handle_new_user)" isExecutable="false">
+    <bpmn:documentation>Subproceso de T01. Trigger SECURITY DEFINER sobre auth.users.</bpmn:documentation>
+    <bpmn:laneSet id="SP01_carriles">
+      <bpmn:lane id="SP01_carril_front" name="Front">
+      </bpmn:lane>
+      <bpmn:lane id="SP01_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP01_carril_bd" name="BD">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>leer</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gUsuario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>descartar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gUnir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>insertar</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gConflicto</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>sinUsuario</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Nuevo registro en auth.users">
+      <bpmn:outgoing>SP01_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="leer" name="Leer usuario y nombre de los metadatos">
+      <bpmn:incoming>SP01_f1</bpmn:incoming>
+      <bpmn:outgoing>SP01_f2</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gUsuario" name="¿Usuario válido y libre?">
+      <bpmn:incoming>SP01_f2</bpmn:incoming>
+      <bpmn:outgoing>SP01_f3</bpmn:outgoing>
+      <bpmn:outgoing>SP01_f4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="descartar" name="Descartar el nombre de usuario">
+      <bpmn:incoming>SP01_f3</bpmn:incoming>
+      <bpmn:outgoing>SP01_f5</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gUnir" name="">
+      <bpmn:incoming>SP01_f4</bpmn:incoming>
+      <bpmn:incoming>SP01_f5</bpmn:incoming>
+      <bpmn:outgoing>SP01_f6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="insertar" name="Insertar perfil con role = user">
+      <bpmn:incoming>SP01_f6</bpmn:incoming>
+      <bpmn:outgoing>SP01_f7</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="gConflicto" name="¿Conflicto de usuario concurrente?">
+      <bpmn:incoming>SP01_f7</bpmn:incoming>
+      <bpmn:outgoing>SP01_f8</bpmn:outgoing>
+      <bpmn:outgoing>SP01_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="sinUsuario" name="Insertar perfil sin usuario">
+      <bpmn:incoming>SP01_f8</bpmn:incoming>
+      <bpmn:outgoing>SP01_f10</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="fin" name="Perfil creado">
+      <bpmn:incoming>SP01_f9</bpmn:incoming>
+      <bpmn:incoming>SP01_f10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP01_f1" sourceRef="inicio" targetRef="leer" />
+    <bpmn:sequenceFlow id="SP01_f2" sourceRef="leer" targetRef="gUsuario" />
+    <bpmn:sequenceFlow id="SP01_f3" sourceRef="gUsuario" targetRef="descartar" name="No" />
+    <bpmn:sequenceFlow id="SP01_f4" sourceRef="gUsuario" targetRef="gUnir" name="Sí" />
+    <bpmn:sequenceFlow id="SP01_f5" sourceRef="descartar" targetRef="gUnir" />
+    <bpmn:sequenceFlow id="SP01_f6" sourceRef="gUnir" targetRef="insertar" />
+    <bpmn:sequenceFlow id="SP01_f7" sourceRef="insertar" targetRef="gConflicto" />
+    <bpmn:sequenceFlow id="SP01_f8" sourceRef="gConflicto" targetRef="sinUsuario" name="Sí" />
+    <bpmn:sequenceFlow id="SP01_f9" sourceRef="gConflicto" targetRef="fin" name="No" />
+    <bpmn:sequenceFlow id="SP01_f10" sourceRef="sinUsuario" targetRef="fin" />
+    <bpmn:textAnnotation id="nota1">
+      <bpmn:text>El registro nunca falla por el nombre de usuario: si no sirve, se omite.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="nota1_asoc" sourceRef="nota1" targetRef="insertar" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP01_diagrama" name="SP01 · Crear perfil (trigger handle_new_user)">
+    <bpmndi:BPMNPlane id="SP01_plano" bpmnElement="SP01_colaboracion">
+      <bpmndi:BPMNShape id="SP01_pool_di" bpmnElement="SP01_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1345" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP01_carril_front_di" bpmnElement="SP01_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP01_carril_servicio_di" bpmnElement="SP01_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP01_carril_bd_di" bpmnElement="SP01_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1315" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="leer_di" bpmnElement="leer">
+        <dc:Bounds x="315" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gUsuario_di" bpmnElement="gUsuario" isMarkerVisible="true">
+        <dc:Bounds x="530" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="descartar_di" bpmnElement="descartar">
+        <dc:Bounds x="490" y="641" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gUnir_di" bpmnElement="gUnir" isMarkerVisible="true">
+        <dc:Bounds x="705" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="insertar_di" bpmnElement="insertar">
+        <dc:Bounds x="840" y="541" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gConflicto_di" bpmnElement="gConflicto" isMarkerVisible="true">
+        <dc:Bounds x="1055" y="552" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sinUsuario_di" bpmnElement="sinUsuario">
+        <dc:Bounds x="1015" y="641" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1237" y="559" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="nota1_di" bpmnElement="nota1">
+        <dc:Bounds x="635" y="317" width="190" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SP01_f1_di" bpmnElement="SP01_f1">
+        <di:waypoint x="223" y="577" />
+        <di:waypoint x="315" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f2_di" bpmnElement="SP01_f2">
+        <di:waypoint x="445" y="577" />
+        <di:waypoint x="530" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f3_di" bpmnElement="SP01_f3">
+        <di:waypoint x="555" y="602" />
+        <di:waypoint x="555" y="641" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="561" y="604" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f4_di" bpmnElement="SP01_f4">
+        <di:waypoint x="580" y="577" />
+        <di:waypoint x="705" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="649" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f5_di" bpmnElement="SP01_f5">
+        <di:waypoint x="620" y="677" />
+        <di:waypoint x="730" y="677" />
+        <di:waypoint x="730" y="602" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f6_di" bpmnElement="SP01_f6">
+        <di:waypoint x="755" y="577" />
+        <di:waypoint x="840" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f7_di" bpmnElement="SP01_f7">
+        <di:waypoint x="970" y="577" />
+        <di:waypoint x="1055" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f8_di" bpmnElement="SP01_f8">
+        <di:waypoint x="1080" y="602" />
+        <di:waypoint x="1080" y="641" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1086" y="604" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f9_di" bpmnElement="SP01_f9">
+        <di:waypoint x="1105" y="577" />
+        <di:waypoint x="1237" y="577" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1177" y="559" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP01_f10_di" bpmnElement="SP01_f10">
+        <di:waypoint x="1145" y="677" />
+        <di:waypoint x="1191" y="677" />
+        <di:waypoint x="1191" y="577" />
+        <di:waypoint x="1237" y="577" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="nota1_asoc_di" bpmnElement="nota1_asoc">
+        <di:waypoint x="730" y="317" />
+        <di:waypoint x="905" y="613" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

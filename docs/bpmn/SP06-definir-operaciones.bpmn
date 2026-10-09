@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generado por scripts/bpmn/generar-bpmn.mjs (DevHub Técnico). No editar a mano: regenerar. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  id="SP06_definiciones" targetNamespace="https://devhub-tecnico.netlify.app/bpmn"
+  exporter="DevHub Técnico" exporterVersion="1.0">
+  <bpmn:collaboration id="SP06_colaboracion">
+    <bpmn:participant id="SP06_pool" name="SP06 · Definir operaciones del servicio" processRef="SP06_proceso" />
+  </bpmn:collaboration>
+  <bpmn:process id="SP06_proceso" name="SP06 · Definir operaciones del servicio" isExecutable="false">
+    <bpmn:documentation>Subproceso de T08. Todo ocurre en el formulario (sin llamadas al servidor).</bpmn:documentation>
+    <bpmn:laneSet id="SP06_carriles">
+      <bpmn:lane id="SP06_carril_front" name="Front">
+          <bpmn:flowNodeRef>inicio</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>anadir</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>datos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>headers</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>ejemplos</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>formatear</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>gOtra</bpmn:flowNodeRef>
+          <bpmn:flowNodeRef>fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="SP06_carril_servicio" name="Servicio">
+      </bpmn:lane>
+      <bpmn:lane id="SP06_carril_bd" name="BD">
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="inicio" name="Edición de operaciones">
+      <bpmn:outgoing>SP06_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="anadir" name="Añadir, duplicar u ordenar una operación">
+      <bpmn:incoming>SP06_f1</bpmn:incoming>
+      <bpmn:incoming>SP06_f7</bpmn:incoming>
+      <bpmn:outgoing>SP06_f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="datos" name="Nombre, método, recurso, SOAPAction y media type">
+      <bpmn:incoming>SP06_f2</bpmn:incoming>
+      <bpmn:outgoing>SP06_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="headers" name="Headers y query params">
+      <bpmn:incoming>SP06_f3</bpmn:incoming>
+      <bpmn:outgoing>SP06_f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="ejemplos" name="Pegar request y response de ejemplo">
+      <bpmn:incoming>SP06_f4</bpmn:incoming>
+      <bpmn:outgoing>SP06_f5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:task id="formatear" name="Formatear JSON / XML">
+      <bpmn:incoming>SP06_f5</bpmn:incoming>
+      <bpmn:outgoing>SP06_f6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="gOtra" name="¿Otra operación?">
+      <bpmn:incoming>SP06_f6</bpmn:incoming>
+      <bpmn:outgoing>SP06_f7</bpmn:outgoing>
+      <bpmn:outgoing>SP06_f8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="fin" name="Operaciones listas">
+      <bpmn:incoming>SP06_f8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SP06_f1" sourceRef="inicio" targetRef="anadir" />
+    <bpmn:sequenceFlow id="SP06_f2" sourceRef="anadir" targetRef="datos" />
+    <bpmn:sequenceFlow id="SP06_f3" sourceRef="datos" targetRef="headers" />
+    <bpmn:sequenceFlow id="SP06_f4" sourceRef="headers" targetRef="ejemplos" />
+    <bpmn:sequenceFlow id="SP06_f5" sourceRef="ejemplos" targetRef="formatear" />
+    <bpmn:sequenceFlow id="SP06_f6" sourceRef="formatear" targetRef="gOtra" />
+    <bpmn:sequenceFlow id="SP06_f7" sourceRef="gOtra" targetRef="anadir" name="Sí" />
+    <bpmn:sequenceFlow id="SP06_f8" sourceRef="gOtra" targetRef="fin" name="No" />
+
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="SP06_diagrama" name="SP06 · Definir operaciones del servicio">
+    <bpmndi:BPMNPlane id="SP06_plano" bpmnElement="SP06_colaboracion">
+      <bpmndi:BPMNShape id="SP06_pool_di" bpmnElement="SP06_pool" isHorizontal="true">
+        <dc:Bounds x="40" y="40" width="1520" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP06_carril_front_di" bpmnElement="SP06_carril_front" isHorizontal="true">
+        <dc:Bounds x="70" y="40" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP06_carril_servicio_di" bpmnElement="SP06_carril_servicio" isHorizontal="true">
+        <dc:Bounds x="70" y="270" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SP06_carril_bd_di" bpmnElement="SP06_carril_bd" isHorizontal="true">
+        <dc:Bounds x="70" y="500" width="1490" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="inicio_di" bpmnElement="inicio">
+        <dc:Bounds x="187" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="anadir_di" bpmnElement="anadir">
+        <dc:Bounds x="315" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="datos_di" bpmnElement="datos">
+        <dc:Bounds x="490" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="headers_di" bpmnElement="headers">
+        <dc:Bounds x="665" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ejemplos_di" bpmnElement="ejemplos">
+        <dc:Bounds x="840" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="formatear_di" bpmnElement="formatear">
+        <dc:Bounds x="1015" y="81" width="130" height="72" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gOtra_di" bpmnElement="gOtra" isMarkerVisible="true">
+        <dc:Bounds x="1230" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fin_di" bpmnElement="fin">
+        <dc:Bounds x="1412" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="SP06_f1_di" bpmnElement="SP06_f1">
+        <di:waypoint x="223" y="117" />
+        <di:waypoint x="315" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f2_di" bpmnElement="SP06_f2">
+        <di:waypoint x="445" y="117" />
+        <di:waypoint x="490" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f3_di" bpmnElement="SP06_f3">
+        <di:waypoint x="620" y="117" />
+        <di:waypoint x="665" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f4_di" bpmnElement="SP06_f4">
+        <di:waypoint x="795" y="117" />
+        <di:waypoint x="840" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f5_di" bpmnElement="SP06_f5">
+        <di:waypoint x="970" y="117" />
+        <di:waypoint x="1015" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f6_di" bpmnElement="SP06_f6">
+        <di:waypoint x="1145" y="117" />
+        <di:waypoint x="1230" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f7_di" bpmnElement="SP06_f7">
+        <di:waypoint x="1255" y="142" />
+        <di:waypoint x="1255" y="163" />
+        <di:waypoint x="380" y="163" />
+        <di:waypoint x="380" y="153" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="386" y="145" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SP06_f8_di" bpmnElement="SP06_f8">
+        <di:waypoint x="1280" y="117" />
+        <di:waypoint x="1412" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1352" y="99" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
