@@ -70,12 +70,14 @@ export class ServicesService extends ResourceRepository<
     input: ServiceRecordInput,
     soapUi: SoapUiChange,
   ): Promise<Service> {
-    const previousPath = id ? (await this.getById(id)).soapui_file_path : null;
+    const previous = id ? await this.getById(id) : null;
+    const previousPath = previous?.soapui_file_path ?? null;
     let uploadedPath: string | null = null;
     let payload: ServiceRecordInput = input;
 
     if (soapUi.kind === 'replace') {
-      uploadedPath = await this.uploadSoapUi(soapUi.file);
+      // Al editar un servicio ajeno (superadmin), el archivo va a la carpeta del propietario.
+      uploadedPath = await this.uploadSoapUi(soapUi.file, previous?.owner_id);
       payload = {
         ...input,
         soapui_file_path: uploadedPath,
@@ -134,12 +136,12 @@ export class ServicesService extends ResourceRepository<
     return data.signedUrl;
   }
 
-  private async uploadSoapUi(file: File): Promise<string> {
+  private async uploadSoapUi(file: File, ownerId: string = this.requireUserId()): Promise<string> {
     const problem = await this.checkSoapUiFile(file);
     if (problem) {
       throw new AppError('validation', problem);
     }
-    const path = `${this.requireUserId()}/${crypto.randomUUID()}.xml`;
+    const path = `${ownerId}/${crypto.randomUUID()}.xml`;
     const { error } = await this.supabase.storage.from(this.bucket).upload(path, file, {
       contentType: 'application/xml',
       upsert: false,

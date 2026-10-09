@@ -29,7 +29,7 @@ tiene lógica de seguridad propia más allá de ocultar botones.
 
 | Tabla | Contenido |
 |---|---|
-| `profiles` | Perfil de cada usuario (creado por trigger al registrarse). `role`: `user` o `admin`. |
+| `profiles` | Perfil de cada usuario (creado por trigger al registrarse). `role`: `user`, `admin` o `superadmin`. |
 | `scripts` | Scripts y plantillas (código con lenguaje y categoría). |
 | `lessons_learned` | Incidencias: problema, causa raíz, solución, severidad, estado. |
 | `notes` | Notas en Markdown (artículos, wiki, guías). |
@@ -40,7 +40,12 @@ tiene lógica de seguridad propia más allá de ocultar botones.
 Reglas comunes de los recursos:
 
 - `visibility = 'private'` → solo el propietario; `'public'` → todos los usuarios autenticados.
-- Solo el propietario edita. Un **admin** puede eliminar recursos **públicos** (moderación).
+- Roles:
+  - **user**: crea contenido; ve lo público y lo propio; edita y elimina **solo lo propio**.
+  - **admin**: como user, y además puede eliminar recursos **públicos** ajenos (moderación).
+  - **superadmin**: ve, edita y elimina **todo**, de cualquier autor, incluidos los recursos
+    privados ajenos. Al sustituir el archivo de un recurso ajeno, se guarda en la carpeta del autor.
+- Nadie puede cambiar su rol ni el de otros desde la app: solo por SQL.
 - Los usuarios anónimos no tienen acceso a ninguna tabla ni función.
 - Bucket `devhub-documents` **privado**: archivos en `{userId}/{uuid}.{ext}`, descarga con URL firmada de 60 s.
 
@@ -86,14 +91,17 @@ idempotentes y transaccionales: si algo falla no queda nada a medias.
 | 2 | [20261009000000_manuals_limite_50mb.sql](supabase/migrations/20261009000000_manuals_limite_50mb.sql) | Límite de manuales de 20 MB a 50 MB |
 | 3 | [20261010000000_dashboard_resumen.sql](supabase/migrations/20261010000000_dashboard_resumen.sql) | Función `dashboard_summary` del panel de inicio |
 | 4 | [20261011000000_servicios.sql](supabase/migrations/20261011000000_servicios.sql) | Módulo Servicios, SoapUI, favoritos/búsqueda/panel con servicios |
+| 5 | [20261012000000_superadmin.sql](supabase/migrations/20261012000000_superadmin.sql) | Rol `superadmin` (ve, edita y elimina todo) |
 
 ### Verificación
 
 1. [supabase/tests/etapa1_validacion_resumen.sql](supabase/tests/etapa1_validacion_resumen.sql):
    una tabla con `ok = true` en todas las filas.
-2. [supabase/tests/etapa1_pruebas_rls.sql](supabase/tests/etapa1_pruebas_rls.sql): debe terminar
+2. [supabase/tests/superadmin_pruebas.sql](supabase/tests/superadmin_pruebas.sql): permisos del superadmin;
+   debe terminar sin error.
+3. [supabase/tests/etapa1_pruebas_rls.sql](supabase/tests/etapa1_pruebas_rls.sql): debe terminar
    sin error (crea usuarios ficticios, prueba los permisos y lo revierte todo).
-3. *Advisors → Security Advisor*: 0 errores. Avisos conocidos y aceptados:
+4. *Advisors → Security Advisor*: 0 errores. Avisos conocidos y aceptados:
    - `register_manual_download` es SECURITY DEFINER a propósito (incrementa un contador que el
      cliente no puede escribir; valida sesión y visibilidad).
    - *Leaked Password Protection* solo existe en el plan Pro.
@@ -143,6 +151,8 @@ Las etiquetas Open Graph (vista previa en WhatsApp/Teams) apuntan a
 |---|---|
 | Ver, invitar o eliminar usuarios | Supabase → *Authentication → Users* |
 | Nombrar administrador | SQL: `update public.profiles set role = 'admin' where id = '<uuid>';` |
+| Nombrar superadministrador | SQL: `update public.profiles set role = 'superadmin' where id = '<uuid>';` (el uuid está en *Table Editor → profiles*) |
+| Quitar un rol | SQL: `update public.profiles set role = 'user' where id = '<uuid>';` |
 | Vigilar cuotas del plan Free (1 GB Storage, 5 GB/mes de transferencia, 500 MB BD) | Supabase → organización → *Usage*; también la barra del panel de inicio |
 | Revisar seguridad | Supabase → *Advisors → Security Advisor* |
 

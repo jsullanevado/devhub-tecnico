@@ -49,7 +49,9 @@ Todo recurso tiene una visibilidad:
 - **Privado (solo yo):** nadie más lo ve. Es la opción por defecto.
 - **Público (todo el equipo):** lo ve cualquier usuario de DevHub.
 
-Solo el autor puede editar o eliminar su contenido.
+Solo el autor puede editar o eliminar su contenido. La excepción es el **superadministrador**
+(su menú de usuario muestra «Superadministrador»): puede ver, editar y eliminar cualquier
+recurso, también los privados, para mantener ordenada la base de conocimiento.
 
 ### Buscar
 
@@ -229,7 +231,7 @@ por línea (sin las etiquetas), listas para pegar en un pase.
 Probablemente es privado. Pídele que lo marque como *Público*.
 
 **No puedo editar un recurso.**
-Solo su autor puede editarlo.
+Solo su autor (o un superadministrador) puede editarlo.
 
 **El archivo no se sube.**
 Revisa el formato admitido y que no supere 50 MB. Si el contenido no coincide con la extensión

@@ -4,7 +4,8 @@ import { BaseResource } from '../../core/models';
 
 /**
  * Reglas de la interfaz para mostrar u ocultar acciones. Reflejan las políticas
- * RLS de la Etapa 1, que son las que realmente autorizan cada operación.
+ * RLS (Etapa 1 y migración 20261012000000), que son las que realmente autorizan
+ * cada operación.
  */
 @Injectable({ providedIn: 'root' })
 export class ResourcePermissions {
@@ -14,12 +15,17 @@ export class ResourcePermissions {
     return resource.owner_id === this.auth.userId();
   }
 
+  /** Propietario o superadmin. */
   canEdit(resource: Pick<BaseResource, 'owner_id'>): boolean {
-    return this.isOwner(resource);
+    return this.isOwner(resource) || this.auth.isSuperAdmin();
   }
 
-  /** Propietario, o administrador moderando un recurso público. */
+  /** Propietario, superadmin, o administrador moderando un recurso público. */
   canDelete(resource: Pick<BaseResource, 'owner_id' | 'visibility'>): boolean {
-    return this.isOwner(resource) || (resource.visibility === 'public' && this.auth.isAdmin());
+    return (
+      this.isOwner(resource) ||
+      this.auth.isSuperAdmin() ||
+      (resource.visibility === 'public' && this.auth.isAdmin())
+    );
   }
 }

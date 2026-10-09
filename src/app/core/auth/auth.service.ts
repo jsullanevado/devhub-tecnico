@@ -33,6 +33,8 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this._session() !== null);
   /** Solo para la interfaz: los permisos reales los aplica RLS. */
   readonly isAdmin = computed(() => this._profile()?.role === 'admin');
+  /** Superadmin: ve, edita y elimina cualquier recurso (migración 20261012000000). */
+  readonly isSuperAdmin = computed(() => this._profile()?.role === 'superadmin');
   /** true cuando ya se conoce la sesión inicial. */
   readonly ready = this._ready.asReadonly();
   /** true tras abrir el enlace de recuperación de contraseña. */

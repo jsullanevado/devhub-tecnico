@@ -77,9 +77,15 @@ export class ManualsService extends ResourceRepository<
     }
   }
 
-  /** Sustituye el archivo de un manual propio. Los archivos son inmutables: se sube uno nuevo. */
-  async replaceFile(manual: Pick<Manual, 'id' | 'file_path'>, file: File): Promise<Manual> {
-    const { path, type } = await this.uploadFile(file);
+  /**
+   * Sustituye el archivo de un manual (propio, o ajeno si es superadmin). Los archivos
+   * son inmutables: se sube uno nuevo en la carpeta del PROPIETARIO del manual.
+   */
+  async replaceFile(
+    manual: Pick<Manual, 'id' | 'file_path' | 'owner_id'>,
+    file: File,
+  ): Promise<Manual> {
+    const { path, type } = await this.uploadFile(file, manual.owner_id);
     let updated: Manual;
     try {
       updated = await this.update(manual.id, this.fileFields(file, path, type));
@@ -157,12 +163,16 @@ export class ManualsService extends ResourceRepository<
     return { url: signed.signedUrl, downloadCount: data };
   }
 
-  private async uploadFile(file: File): Promise<{ path: string; type: ManualFileType }> {
+  /** `ownerId`: carpeta destino (por defecto la del usuario actual). */
+  private async uploadFile(
+    file: File,
+    ownerId: string = this.requireUserId(),
+  ): Promise<{ path: string; type: ManualFileType }> {
     const validation = await this.checkFile(file);
     if (!validation.valid) {
       throw new AppError('validation', validation.message);
     }
-    const path = `${this.requireUserId()}/${crypto.randomUUID()}.${validation.type.extension}`;
+    const path = `${ownerId}/${crypto.randomUUID()}.${validation.type.extension}`;
     const { error } = await this.supabase.storage.from(this.bucket).upload(path, file, {
       // MIME según la extensión validada, no el declarado por el navegador.
       contentType: validation.type.mime,

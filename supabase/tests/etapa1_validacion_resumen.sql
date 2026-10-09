@@ -2,7 +2,7 @@
 -- DevHub Técnico · Etapa 1 · Resumen de validación (solo lectura)
 -- Versión de una sola consulta de etapa1_validacion.sql: el SQL Editor solo
 -- muestra el último resultado, así que aquí cada comprobación es una fila.
--- Refleja las migraciones hasta 20261011000000 (servicios).
+-- Refleja las migraciones hasta 20261012000000 (superadmin).
 -- Esperado: ok = true en todas las filas. Si alguna da false, revisar el bloque
 -- V correspondiente de etapa1_validacion.sql para ver el detalle.
 -- =============================================================================
@@ -58,7 +58,7 @@ with checks (orden, bloque, comprobacion, esperado, obtenido) as (
                       'manuals_10_validate_file', 'manuals_20_before_write',
                       'services_10_validate_file', 'services_20_before_write'))),
 
-  (10, 'V8', 'Funciones SECURITY DEFINER (is_admin, handle_new_user, register_manual_download, storage_used_bytes)', '4',
+  (10, 'V8', 'Funciones SECURITY DEFINER (is_admin, is_superadmin, handle_new_user, register_manual_download, storage_used_bytes)', '5',
    (select count(*)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in ('public', 'private') and p.prosecdef)),
 
