@@ -19,9 +19,12 @@ const SEARCH_DEBOUNCE_MS = 300;
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'relative block' },
   template: `
+    <!-- El posicionamiento va en el host del icono: si fuera en el <svg>, el host
+         inline seguiría ocupando una línea y empujaría el campo hacia abajo. -->
     <app-icon
       name="search"
-      iconClass="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+      class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-slate-400"
+      iconClass="size-4"
     />
     <input
       type="search"

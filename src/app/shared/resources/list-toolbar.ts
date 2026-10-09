@@ -28,20 +28,24 @@ const SORTS = SORT_OPTIONS.map((option) => option.value);
   host: { class: 'block' },
   template: `
     <div class="card space-y-3 p-4" role="search" [attr.aria-label]="'Filtrar ' + subject()">
-      <div class="grid gap-3 md:grid-cols-2">
+      <div class="flex flex-col gap-3 md:flex-row md:items-start">
         <app-search-box
+          class="md:flex-[3]"
           [value]="search()"
           [placeholder]="'Buscar ' + subject() + '…'"
           [label]="'Buscar ' + subject()"
           (valueChange)="searchChange.emit($event)"
         />
         <app-tag-input
+          class="md:flex-[2]"
           inputId="filter-tags"
           placeholder="Filtrar por etiquetas (Enter)"
           [formControl]="tagsControl"
         />
       </div>
-      <div class="flex flex-wrap items-center gap-2">
+      <div
+        class="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-3 dark:border-slate-800"
+      >
         <select class="input w-auto" aria-label="Ámbito" (change)="onScope($event)">
           @for (option of scopeOptions; track option.value) {
             <option [value]="option.value" [selected]="option.value === scope()">
@@ -50,18 +54,23 @@ const SORTS = SORT_OPTIONS.map((option) => option.value);
           }
         </select>
         <ng-content />
-        <select class="input w-auto" aria-label="Ordenar por" (change)="onSort($event)">
-          @for (option of sortOptions; track option.value) {
-            <option [value]="option.value" [selected]="option.value === sort()">
-              {{ option.label }}
-            </option>
+        <div class="flex flex-wrap items-center gap-2 sm:ms-auto">
+          @if (hasFilters()) {
+            <button type="button" class="link text-sm" (click)="clear.emit()">
+              Limpiar filtros
+            </button>
           }
-        </select>
-        @if (hasFilters()) {
-          <button type="button" class="link ms-auto text-sm" (click)="clear.emit()">
-            Limpiar filtros
-          </button>
-        }
+          <label class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            Ordenar
+            <select class="input w-auto" (change)="onSort($event)">
+              @for (option of sortOptions; track option.value) {
+                <option [value]="option.value" [selected]="option.value === sort()">
+                  {{ option.label }}
+                </option>
+              }
+            </select>
+          </label>
+        </div>
       </div>
     </div>
   `,
