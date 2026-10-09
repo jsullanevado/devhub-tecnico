@@ -66,6 +66,13 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         icon: 'book',
         description: 'Documentos, manuales y arquitecturas de referencia.',
       },
+      {
+        label: 'Servicios',
+        path: '/services',
+        icon: 'plug',
+        description:
+          'Endpoints REST/SOAP y DataPower con headers, request, response y credenciales.',
+      },
     ],
   },
   {

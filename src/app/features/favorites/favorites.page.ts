@@ -11,17 +11,11 @@ import { createAsyncLoader } from '../../shared/resources/async-loader';
 import { LoadState } from '../../shared/resources/load-state';
 import { VisibilityBadge } from '../../shared/ui/badges/badges';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
-import { Icon, IconName } from '../../shared/ui/icon/icon';
+import { Icon } from '../../shared/ui/icon/icon';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
+import { RESOURCE_TYPE_ICONS } from '../../shared/resources/resource-type-icons';
 
 type TypeFilter = ResourceType | 'all';
-
-const TYPE_ICON: Record<ResourceType, IconName> = {
-  script: 'code',
-  lesson: 'lightbulb',
-  note: 'note',
-  manual: 'book',
-};
 
 const FILTERS: readonly { value: TypeFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
@@ -29,6 +23,7 @@ const FILTERS: readonly { value: TypeFilter; label: string }[] = [
   { value: 'lesson', label: 'Lecciones' },
   { value: 'note', label: 'Notas' },
   { value: 'manual', label: 'Manuales' },
+  { value: 'service', label: 'Servicios' },
 ];
 
 @Component({
@@ -61,7 +56,7 @@ const FILTERS: readonly { value: TypeFilter; label: string }[] = [
             class="mt-6 block"
             icon="star"
             [title]="items().length ? 'No hay favoritos de este tipo' : 'Aún no tienes favoritos'"
-            message="Pulsa la estrella en cualquier script, lección, nota o manual para guardarlo aquí."
+            message="Pulsa la estrella en cualquier script, lección, nota, manual o servicio para guardarlo aquí."
           />
         } @else {
           <ul class="mt-6 space-y-3">
@@ -123,7 +118,7 @@ export class FavoritesPage {
   private readonly notifications = inject(NotificationService);
 
   protected readonly filters = FILTERS;
-  protected readonly typeIcon = TYPE_ICON;
+  protected readonly typeIcon = RESOURCE_TYPE_ICONS;
   protected readonly typeLabel = RESOURCE_TYPE_LABELS;
   protected readonly filter = signal<TypeFilter>('all');
   protected readonly removing = signal<ReadonlySet<string>>(new Set());
@@ -148,6 +143,7 @@ export class FavoritesPage {
       lesson: 0,
       note: 0,
       manual: 0,
+      service: 0,
     };
     for (const item of this.items()) {
       counts.all++;

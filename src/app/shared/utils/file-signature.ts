@@ -11,7 +11,8 @@ const ZIP = [0x50, 0x4b, 0x03, 0x04]; // docx/xlsx/pptx son contenedores ZIP
 /**
  * Comprueba que el contenido real del archivo corresponda a su extensión
  * ("magic numbers"). Evita, por ejemplo, subir un HTML renombrado a .pdf.
- * Para .txt/.md exige texto (sin bytes nulos en el inicio).
+ * Para .txt/.md exige texto (sin bytes nulos en el inicio); para .xml, además, que
+ * empiece por "<" (tras un BOM UTF-8 o espacios opcionales).
  */
 export async function matchesFileSignature(file: Blob, extension: string): Promise<boolean> {
   const head = new Uint8Array(await file.slice(0, HEAD_BYTES).arrayBuffer());
@@ -32,6 +33,8 @@ export async function matchesFileSignature(file: Blob, extension: string): Promi
     case 'txt':
     case 'md':
       return !head.includes(0);
+    case 'xml':
+      return isXmlText(head);
     default:
       return false;
   }
@@ -42,4 +45,18 @@ function startsWith(bytes: Uint8Array, signature: readonly number[], offset = 0)
     bytes.length >= offset + signature.length &&
     signature.every((byte, index) => bytes[offset + index] === byte)
   );
+}
+
+const UTF8_BOM = [0xef, 0xbb, 0xbf];
+const WHITESPACE = new Set([0x20, 0x09, 0x0a, 0x0d]);
+
+function isXmlText(bytes: Uint8Array): boolean {
+  if (bytes.includes(0)) {
+    return false;
+  }
+  let index = startsWith(bytes, UTF8_BOM) ? UTF8_BOM.length : 0;
+  while (index < bytes.length && WHITESPACE.has(bytes[index])) {
+    index++;
+  }
+  return bytes[index] === 0x3c; // '<'
 }

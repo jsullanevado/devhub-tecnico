@@ -19,16 +19,10 @@ import { visibleSections } from '../../layout/navigation';
 import { createAsyncLoader } from '../../shared/resources/async-loader';
 import { Alert } from '../../shared/ui/alert/alert';
 import { VisibilityBadge } from '../../shared/ui/badges/badges';
-import { Icon, IconName } from '../../shared/ui/icon/icon';
+import { Icon } from '../../shared/ui/icon/icon';
 import { Spinner } from '../../shared/ui/spinner/spinner';
 import { formatBytes } from '../../shared/utils/format';
-
-const TYPE_ICON: Record<ResourceType, IconName> = {
-  script: 'code',
-  lesson: 'lightbulb',
-  note: 'note',
-  manual: 'book',
-};
+import { RESOURCE_TYPE_ICONS } from '../../shared/resources/resource-type-icons';
 
 const PATH_TYPE = Object.fromEntries(
   Object.entries(RESOURCE_PATHS).map(([type, path]) => [path, type]),
@@ -323,7 +317,7 @@ export class DashboardPage {
   private readonly favoritesService = inject(FavoritesService);
   protected readonly layout = inject(LayoutService);
 
-  protected readonly typeIcon = TYPE_ICON;
+  protected readonly typeIcon = RESOURCE_TYPE_ICONS;
   protected readonly typeLabel = RESOURCE_TYPE_LABELS;
   protected readonly paths = RESOURCE_PATHS;
 

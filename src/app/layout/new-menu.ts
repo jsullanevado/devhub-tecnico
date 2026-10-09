@@ -23,6 +23,7 @@ const NEW_ITEMS: readonly NewMenuItem[] = [
   { type: 'lesson', label: 'Lección aprendida', icon: 'lightbulb' },
   { type: 'note', label: 'Nota técnica', icon: 'note' },
   { type: 'manual', label: 'Manual o documento', icon: 'book' },
+  { type: 'service', label: 'Servicio (REST/SOAP)', icon: 'plug' },
 ];
 
 /** Botón "Nuevo" de la barra superior: crea cualquier recurso sin entrar antes al módulo. */

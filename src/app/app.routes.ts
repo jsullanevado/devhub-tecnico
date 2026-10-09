@@ -67,6 +67,11 @@ export const routes: Routes = [
           import('./features/manuals/manuals.routes').then((m) => m.MANUALS_ROUTES),
       },
       {
+        path: 'services',
+        loadChildren: () =>
+          import('./features/services/services.routes').then((m) => m.SERVICES_ROUTES),
+      },
+      {
         path: 'tools',
         loadChildren: () => import('./features/tools/tools.routes').then((m) => m.TOOLS_ROUTES),
       },

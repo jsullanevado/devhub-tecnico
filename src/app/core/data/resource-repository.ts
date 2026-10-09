@@ -15,7 +15,7 @@ import {
 import { SUPABASE } from '../supabase/supabase.client';
 import { clamp, FTS_CONFIG, isUuid, withoutUndefined } from './query-utils';
 
-export type ResourceTable = 'scripts' | 'lessons_learned' | 'notes' | 'manuals';
+export type ResourceTable = 'scripts' | 'lessons_learned' | 'notes' | 'manuals' | 'services';
 
 /** Filtro declarativo que cada repositorio traduce desde sus filtros tipados. */
 export interface FilterCondition {

@@ -1,5 +1,5 @@
 import { expect, login, openNavIfCollapsed, test } from './support/fixtures';
-import { SCRIPTS } from './support/supabase-mock';
+import { SCRIPTS, SERVICES } from './support/supabase-mock';
 
 test.describe('Autenticación y rutas protegidas', () => {
   test('una ruta privada sin sesión redirige al login conservando el destino', async ({
@@ -244,6 +244,46 @@ test.describe('Panel de inicio', () => {
     await page.getByRole('button', { name: 'Nuevo recurso' }).click();
     await page.getByRole('menuitem', { name: 'Script o plantilla' }).click();
     await expect(page).toHaveURL(/\/scripts\/new$/);
+  });
+});
+
+test.describe('Servicios', () => {
+  test('el detalle muestra la operación y oculta las credenciales hasta pedirlas', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    const service = SERVICES[0];
+    await login(page, '/services');
+    await page.getByRole('link', { name: service.title }).click();
+    await expect(page).toHaveURL(new RegExp(`/services/${service.id}$`));
+    await expect(
+      page.getByText('http://10.0.0.1/v1.0/svcProblem/ejecutaAccionMovil'),
+    ).toBeVisible();
+    await expect(page.getByText(service.auth_secret)).toHaveCount(0);
+    await page.getByRole('button', { name: 'Mostrar secreto' }).click();
+    await expect(page.getByText(service.auth_secret)).toBeVisible();
+    await expect(page.locator('.cm-content').last()).toContainText('MessageResponse');
+  });
+
+  test('crea un servicio con una operación', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    await login(page, '/services/new');
+    await page.getByLabel('Título').fill('Consulta de clientes QA');
+    await page.getByLabel('URL base (endpoint)').fill('sin-protocolo');
+    await page.getByRole('button', { name: 'Crear servicio' }).click();
+    await expect(page.getByText('Debe empezar por http:// o https://').first()).toBeVisible();
+    await expect(page.getByText('El nombre es obligatorio.')).toBeVisible();
+
+    await page.getByLabel('URL base (endpoint)').fill('https://api.qa.test');
+    await page.getByLabel('Nombre de la operación').fill('consultarCliente');
+    await page.getByLabel('Recurso (ruta tras la URL base)').fill('/clientes');
+    await page.getByRole('button', { name: 'Crear servicio' }).click();
+    await expect(page).toHaveURL(/\/services\/cccccccc-0000-4000-8000-000000000099$/);
+    await expect(page.getByText('https://api.qa.test/clientes')).toBeVisible();
   });
 });
 

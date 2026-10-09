@@ -55,6 +55,48 @@ export const SCRIPTS = [
   },
 ];
 
+export const SERVICES = [
+  {
+    id: 'cccccccc-0000-4000-8000-000000000001',
+    owner_id: TEST_USER.id,
+    title: 'Problemas de uso prohibido',
+    description: 'Servicio ficticio de postventa',
+    system: 'OM',
+    protocol: 'rest',
+    base_url: 'http://10.0.0.1',
+    datapower_domain: 'MIG1_postventa',
+    datapower_object: null,
+    wsdl_url: null,
+    auth_type: 'basic',
+    auth_username: 'usuario_qa',
+    auth_secret: 'Secreto123',
+    auth_notes: null,
+    notes: null,
+    operations: [
+      {
+        name: 'ejecutaAccionMovil',
+        method: 'POST',
+        path: '/v1.0/svcProblem/ejecutaAccionMovil',
+        media_type: 'application/json',
+        headers: [{ name: 'idTransaccion', value: '123' }],
+        query_params: [],
+        request_body: '{"MessageRequest": {}}',
+        response_status: 200,
+        response_body: '{"MessageResponse": {"status": "OK"}}',
+        notes: null,
+      },
+    ],
+    soapui_file_path: null,
+    soapui_file_name: null,
+    soapui_file_size: null,
+    tags: ['postventa'],
+    visibility: 'public',
+    created_at: now,
+    updated_at: now,
+    author: author(TEST_USER.id, TEST_USER.fullName),
+  },
+];
+
 interface MockState {
   favorites: { id: string; script_id: string; created_at: string }[];
 }
@@ -130,6 +172,7 @@ function eqParam(url: URL, column: string): string | null {
 
 export async function mockSupabase(page: Page): Promise<MockState> {
   const state: MockState = { favorites: [] };
+  const createdServices: (typeof SERVICES)[number][] = [];
 
   await page.route(`${SUPABASE_URL}/**`, async (route, request) => {
     const url = new URL(request.url());
@@ -282,6 +325,27 @@ export async function mockSupabase(page: Page): Promise<MockState> {
           top_tags: [...tagCounts].map(([tag, count]) => ({ tag, count })),
           storage: { used_bytes: 300 * 1024 * 1024 },
         });
+      }
+      case 'services': {
+        if (method === 'POST') {
+          const body = request.postDataJSON() as Partial<(typeof SERVICES)[number]>;
+          const created = {
+            ...SERVICES[0],
+            ...body,
+            id: 'cccccccc-0000-4000-8000-000000000099',
+            soapui_file_path: null,
+            soapui_file_name: null,
+            soapui_file_size: null,
+          } as (typeof SERVICES)[number];
+          createdServices.push(created);
+          return json(route, 201, created);
+        }
+        const id = eqParam(url, 'id');
+        return rows(
+          route,
+          request,
+          [...SERVICES, ...createdServices].filter((service) => !id || service.id === id),
+        );
       }
       case 'lessons_learned':
       case 'notes':

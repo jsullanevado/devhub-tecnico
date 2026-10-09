@@ -13,4 +13,5 @@ export const RESOURCE_PATHS: Record<ResourceType, string> = {
   lesson: '/lessons',
   note: '/notes',
   manual: '/manuals',
+  service: '/services',
 };

@@ -7,3 +7,4 @@ export * from './note.models';
 export * from './profile.models';
 export * from './script.models';
 export * from './search.models';
+export * from './service.models';

@@ -14,24 +14,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { SearchService } from '../core/data/search.service';
-import {
-  RESOURCE_TYPE_LABELS,
-  ResourceType,
-  SEARCH_MIN_LENGTH,
-  SearchResult,
-  SearchState,
-} from '../core/models';
+import { RESOURCE_TYPE_LABELS, SEARCH_MIN_LENGTH, SearchResult, SearchState } from '../core/models';
 import { RESOURCE_PATHS } from '../core/routing/app-paths';
-import { Icon, IconName } from '../shared/ui/icon/icon';
+import { Icon } from '../shared/ui/icon/icon';
 import { Spinner } from '../shared/ui/spinner/spinner';
 import { LayoutService } from './layout.service';
-
-const TYPE_ICON: Record<ResourceType, IconName> = {
-  script: 'code',
-  lesson: 'lightbulb',
-  note: 'note',
-  manual: 'book',
-};
+import { RESOURCE_TYPE_ICONS } from '../shared/resources/resource-type-icons';
 
 /**
  * Buscador global (Ctrl/⌘ + K). Patrón combobox + listbox: el foco permanece en
@@ -146,7 +134,7 @@ export class SearchPalette {
   private readonly input = viewChild.required<ElementRef<HTMLInputElement>>('input');
 
   protected readonly minLength = SEARCH_MIN_LENGTH;
-  protected readonly typeIcon = TYPE_ICON;
+  protected readonly typeIcon = RESOURCE_TYPE_ICONS;
   protected readonly typeLabel = RESOURCE_TYPE_LABELS;
 
   private readonly terms$ = new Subject<string>();

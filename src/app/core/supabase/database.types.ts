@@ -284,6 +284,95 @@ export type Database = {
           },
         ];
       };
+      services: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string | null;
+          system: string | null;
+          protocol: string;
+          base_url: string;
+          wsdl_url: string | null;
+          datapower_domain: string | null;
+          datapower_object: string | null;
+          auth_type: string;
+          auth_username: string | null;
+          auth_secret: string | null;
+          auth_notes: string | null;
+          notes: string | null;
+          operations: Json;
+          soapui_file_path: string | null;
+          soapui_file_name: string | null;
+          soapui_file_size: number | null;
+          tags: string[];
+          visibility: string;
+          search_vector: unknown | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id?: string;
+          title: string;
+          description?: string | null;
+          system?: string | null;
+          protocol?: string;
+          base_url: string;
+          wsdl_url?: string | null;
+          datapower_domain?: string | null;
+          datapower_object?: string | null;
+          auth_type?: string;
+          auth_username?: string | null;
+          auth_secret?: string | null;
+          auth_notes?: string | null;
+          notes?: string | null;
+          operations?: Json;
+          soapui_file_path?: string | null;
+          soapui_file_name?: string | null;
+          soapui_file_size?: number | null;
+          tags?: string[];
+          visibility?: string;
+          search_vector?: unknown | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string | null;
+          system?: string | null;
+          protocol?: string;
+          base_url?: string;
+          wsdl_url?: string | null;
+          datapower_domain?: string | null;
+          datapower_object?: string | null;
+          auth_type?: string;
+          auth_username?: string | null;
+          auth_secret?: string | null;
+          auth_notes?: string | null;
+          notes?: string | null;
+          operations?: Json;
+          soapui_file_path?: string | null;
+          soapui_file_name?: string | null;
+          soapui_file_size?: number | null;
+          tags?: string[];
+          visibility?: string;
+          search_vector?: unknown | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'services_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       user_favorites: {
         Row: {
           id: string;
@@ -292,6 +381,7 @@ export type Database = {
           lesson_id: string | null;
           note_id: string | null;
           manual_id: string | null;
+          service_id: string | null;
           resource_type: string | null;
           created_at: string;
         };
@@ -302,6 +392,7 @@ export type Database = {
           lesson_id?: string | null;
           note_id?: string | null;
           manual_id?: string | null;
+          service_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -311,6 +402,7 @@ export type Database = {
           lesson_id?: string | null;
           note_id?: string | null;
           manual_id?: string | null;
+          service_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -347,6 +439,13 @@ export type Database = {
             columns: ['manual_id'];
             isOneToOne: false;
             referencedRelation: 'manuals';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'user_favorites_service_id_fkey';
+            columns: ['service_id'];
+            isOneToOne: false;
+            referencedRelation: 'services';
             referencedColumns: ['id'];
           },
         ];

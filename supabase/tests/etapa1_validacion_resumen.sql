@@ -2,22 +2,23 @@
 -- DevHub Técnico · Etapa 1 · Resumen de validación (solo lectura)
 -- Versión de una sola consulta de etapa1_validacion.sql: el SQL Editor solo
 -- muestra el último resultado, así que aquí cada comprobación es una fila.
+-- Refleja las migraciones hasta 20261011000000 (servicios).
 -- Esperado: ok = true en todas las filas. Si alguna da false, revisar el bloque
 -- V correspondiente de etapa1_validacion.sql para ver el detalle.
 -- =============================================================================
 
 with checks (orden, bloque, comprobacion, esperado, obtenido) as (
   values
-  (1, 'V1', 'Tablas de la app con RLS activo', '6',
+  (1, 'V1', 'Tablas de la app con RLS activo (con services)', '7',
    (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relrowsecurity
-       and c.relname in ('profiles', 'scripts', 'lessons_learned', 'notes', 'manuals', 'user_favorites'))),
+       and c.relname in ('profiles', 'scripts', 'lessons_learned', 'notes', 'manuals', 'user_favorites', 'services'))),
 
   (2, 'V2', 'Tablas de public SIN RLS', '0',
    (select count(*)::text from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relrowsecurity)),
 
-  (3, 'V3', 'Políticas (21 en public + 3 en storage)', '24',
+  (3, 'V3', 'Políticas (25 en public + 3 en storage)', '28',
    (select count(*)::text from pg_policies
      where schemaname = 'public' or (schemaname = 'storage' and policyname like 'devhub_documents_%'))),
 
@@ -38,22 +39,24 @@ with checks (orden, bloque, comprobacion, esperado, obtenido) as (
           + has_column_privilege('authenticated', 'public.notes', 'search_vector', 'UPDATE')::int
           + has_column_privilege('authenticated', 'public.user_favorites', 'user_id', 'INSERT')::int)::text)),
 
-  (7, 'V6', 'Índices GIN (search_vector + tags)', '8',
+  (7, 'V6', 'Índices GIN (search_vector + tags)', '10',
    (select count(*)::text from pg_indexes
      where schemaname = 'public' and indexdef ilike '%using gin%')),
 
-  (8, 'V6', 'Índices únicos de favoritos y username', '5',
+  (8, 'V6', 'Índices únicos de favoritos y username', '6',
    (select count(*)::text from pg_indexes
      where schemaname = 'public'
        and indexname in ('user_favorites_script_key', 'user_favorites_lesson_key', 'user_favorites_note_key',
-                         'user_favorites_manual_key', 'profiles_username_lower_key'))),
+                         'user_favorites_manual_key', 'user_favorites_service_key',
+                         'profiles_username_lower_key'))),
 
-  (9, 'V7', 'Triggers de la app activos', '7',
+  (9, 'V7', 'Triggers de la app activos', '9',
    (select count(*)::text from pg_trigger
      where not tgisinternal and tgenabled <> 'D'
        and tgname in ('on_auth_user_created', 'profiles_set_updated_at', 'scripts_before_write',
                       'lessons_learned_before_write', 'notes_before_write',
-                      'manuals_10_validate_file', 'manuals_20_before_write'))),
+                      'manuals_10_validate_file', 'manuals_20_before_write',
+                      'services_10_validate_file', 'services_20_before_write'))),
 
   (10, 'V8', 'Funciones SECURITY DEFINER (is_admin, handle_new_user, register_manual_download, storage_used_bytes)', '4',
    (select count(*)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -81,7 +84,7 @@ with checks (orden, bloque, comprobacion, esperado, obtenido) as (
   (15, 'V10', 'Límite del bucket (50 MB)', '52428800',
    (select file_size_limit::text from storage.buckets where id = 'devhub-documents')),
 
-  (16, 'V10', 'Tipos MIME permitidos', '9',
+  (16, 'V10', 'Tipos MIME permitidos (con XML para SoapUI)', '11',
    (select cardinality(allowed_mime_types)::text from storage.buckets where id = 'devhub-documents')),
 
   (17, 'V11', 'Búsqueda insensible a tildes', 'true',

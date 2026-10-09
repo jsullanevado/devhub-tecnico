@@ -30,4 +30,13 @@ describe('matchesFileSignature', () => {
     expect(await matchesFileSignature(blob(''), 'pdf')).toBe(false);
     expect(await matchesFileSignature(blob('%PDF-'), 'exe')).toBe(false);
   });
+
+  it('reconoce XML (con BOM o espacios) y rechaza binarios', async () => {
+    expect(
+      await matchesFileSignature(blob('<?xml version="1.0"?><con:soapui-project/>'), 'xml'),
+    ).toBe(true);
+    expect(await matchesFileSignature(blob([0xef, 0xbb, 0xbf], '\n  <root/>'), 'xml')).toBe(true);
+    expect(await matchesFileSignature(blob('{"json": true}'), 'xml')).toBe(false);
+    expect(await matchesFileSignature(blob([0x50, 0x4b, 0x03, 0x04, 0]), 'xml')).toBe(false);
+  });
 });
