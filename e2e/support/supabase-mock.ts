@@ -254,6 +254,35 @@ export async function mockSupabase(page: Page): Promise<MockState> {
           })),
         );
       }
+      case 'rpc/dashboard_summary': {
+        const recent = SCRIPTS.map((script) => ({
+          resource_type: 'script',
+          id: script.id,
+          owner_id: script.owner_id,
+          title: script.title,
+          visibility: script.visibility,
+          updated_at: script.updated_at,
+          author: script.author.full_name,
+        }));
+        const tagCounts = new Map<string, number>();
+        SCRIPTS.flatMap((script) => script.tags).forEach((tag) =>
+          tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1),
+        );
+        return json(route, 200, {
+          counts: {
+            script: {
+              total: SCRIPTS.length,
+              mine: SCRIPTS.filter((script) => script.owner_id === TEST_USER.id).length,
+            },
+          },
+          recent,
+          mine_recent: recent.filter((item) => item.owner_id === TEST_USER.id),
+          lessons: { open: 2, open_critical: 1, open_high: 0 },
+          top_manuals: [],
+          top_tags: [...tagCounts].map(([tag, count]) => ({ tag, count })),
+          storage: { used_bytes: 300 * 1024 * 1024 },
+        });
+      }
       case 'lessons_learned':
       case 'notes':
       case 'manuals':

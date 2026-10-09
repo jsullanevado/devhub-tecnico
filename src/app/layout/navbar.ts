@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Icon } from '../shared/ui/icon/icon';
 import { ThemeToggle } from '../shared/ui/theme-toggle/theme-toggle';
 import { LayoutService } from './layout.service';
+import { NewMenu } from './new-menu';
 import { UserMenu } from './user-menu';
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 @Component({
   selector: 'app-navbar',
-  imports: [Icon, ThemeToggle, UserMenu],
+  imports: [Icon, NewMenu, ThemeToggle, UserMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header
@@ -38,6 +39,7 @@ const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(naviga
       </button>
 
       <div class="ms-auto flex items-center gap-1">
+        <app-new-menu class="me-1" />
         <app-theme-toggle />
         <app-user-menu />
       </div>

@@ -55,7 +55,7 @@ with checks (orden, bloque, comprobacion, esperado, obtenido) as (
                       'lessons_learned_before_write', 'notes_before_write',
                       'manuals_10_validate_file', 'manuals_20_before_write'))),
 
-  (10, 'V8', 'Funciones SECURITY DEFINER (is_admin, handle_new_user, register_manual_download)', '3',
+  (10, 'V8', 'Funciones SECURITY DEFINER (is_admin, handle_new_user, register_manual_download, storage_used_bytes)', '4',
    (select count(*)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in ('public', 'private') and p.prosecdef)),
 
@@ -71,6 +71,9 @@ with checks (orden, bloque, comprobacion, esperado, obtenido) as (
   (13, 'V9', 'authenticated puede ejecutar las RPC', 'true',
    (select (has_function_privilege('authenticated', 'public.search_resources(text, text[], integer, integer)', 'EXECUTE')
         and has_function_privilege('authenticated', 'public.register_manual_download(uuid)', 'EXECUTE'))::text)),
+
+  (19, 'V9', 'anon puede ejecutar dashboard_summary (migración 20261010000000)', 'false',
+   (select has_function_privilege('anon', 'public.dashboard_summary()', 'EXECUTE')::text)),
 
   (14, 'V10', 'Bucket privado', 'false',
    (select public::text from storage.buckets where id = 'devhub-documents')),

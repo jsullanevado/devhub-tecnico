@@ -14,8 +14,18 @@ export class LayoutService {
     this.sidebarOpen.set(false);
   }
 
-  openSearch(): void {
+  /** Texto con el que se abrirá el buscador (p. ej. al pulsar una etiqueta); se consume al abrir. */
+  private searchSeed: string | null = null;
+
+  openSearch(seed?: string): void {
+    this.searchSeed = seed?.trim() || null;
     this.searchOpen.set(true);
+  }
+
+  consumeSearchSeed(): string | null {
+    const seed = this.searchSeed;
+    this.searchSeed = null;
+    return seed;
   }
 
   closeSearch(): void {

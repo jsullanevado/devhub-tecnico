@@ -1,3 +1,4 @@
+import { STORAGE_QUOTA_BYTES, storageUsagePercent } from './dashboard.models';
 import { areTagsValid, normalizeTags } from './common.models';
 import { MANUAL_MAX_FILE_BYTES, validateManualFile } from './manual.models';
 
@@ -41,5 +42,14 @@ describe('validateManualFile', () => {
 
   it('rechaza MIME que no coincide con la extensión', () => {
     expect(validateManualFile(file('falso.pdf', 10, 'text/html')).valid).toBe(false);
+  });
+});
+
+describe('storageUsagePercent', () => {
+  it('calcula el porcentaje de la cuota con un decimal y lo limita a 0–100', () => {
+    expect(storageUsagePercent(0)).toBe(0);
+    expect(storageUsagePercent(300 * 1024 ** 2)).toBe(29.3);
+    expect(storageUsagePercent(-5)).toBe(0);
+    expect(storageUsagePercent(STORAGE_QUOTA_BYTES * 2)).toBe(100);
   });
 });

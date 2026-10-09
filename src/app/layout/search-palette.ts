@@ -170,6 +170,12 @@ export class SearchPalette {
       if (this.layout.searchOpen() && !dialog.open) {
         dialog.showModal();
         const input = this.input().nativeElement;
+        const seed = this.layout.consumeSearchSeed();
+        if (seed !== null) {
+          input.value = seed;
+          untracked(() => this.term.set(seed));
+          this.terms$.next(seed);
+        }
         input.focus();
         input.select();
       } else if (!this.layout.searchOpen() && dialog.open) {

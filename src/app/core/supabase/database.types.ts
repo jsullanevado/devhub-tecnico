@@ -379,6 +379,10 @@ export type Database = {
         Args: { p_manual_id: string };
         Returns: number;
       };
+      dashboard_summary: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
     };
     Enums: {
       [_ in never]: never;

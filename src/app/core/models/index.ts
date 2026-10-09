@@ -1,4 +1,5 @@
 export * from './common.models';
+export * from './dashboard.models';
 export * from './favorite.models';
 export * from './lesson.models';
 export * from './manual.models';

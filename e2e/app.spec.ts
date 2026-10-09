@@ -203,6 +203,50 @@ test.describe('Scripts, búsqueda y favoritos', () => {
   });
 });
 
+test.describe('Panel de inicio', () => {
+  test('muestra contadores, recientes, lecciones abiertas y uso de almacenamiento', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    await login(page);
+    const scriptsCard = page.getByRole('main').getByRole('link', { name: /Scripts y plantillas/ });
+    await expect(scriptsCard).toContainText(String(SCRIPTS.length));
+    await expect(scriptsCard).toContainText('1 tuyo');
+    await expect(page.getByRole('link', { name: /2 lecciones abiertas/ })).toHaveAttribute(
+      'href',
+      '/lessons?status=open',
+    );
+    const recent = page.getByRole('region', { name: 'Agregados recientemente' });
+    await expect(recent.getByRole('link', { name: /Consulta de clientes activos/ })).toBeVisible();
+    await expect(
+      page.getByRole('progressbar', { name: 'Almacenamiento de manuales' }),
+    ).toHaveAttribute('aria-valuenow', '29.3');
+  });
+
+  test('una etiqueta abre el buscador con ese término', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    await login(page);
+    await page.getByRole('button', { name: 'Buscar la etiqueta soap' }).click();
+    await expect(page.getByRole('combobox', { name: /Buscar scripts/ })).toHaveValue('soap');
+    await expect(page.getByRole('option', { name: /Petición SOAP/ })).toBeVisible();
+  });
+
+  test('el botón Nuevo lleva al formulario del recurso elegido', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    await login(page);
+    await page.getByRole('button', { name: 'Nuevo recurso' }).click();
+    await page.getByRole('menuitem', { name: 'Script o plantilla' }).click();
+    await expect(page).toHaveURL(/\/scripts\/new$/);
+  });
+});
+
 test.describe('Herramientas', () => {
   test('genera RUC válidos y valida el RUC de SUNAT', async ({
     page,
