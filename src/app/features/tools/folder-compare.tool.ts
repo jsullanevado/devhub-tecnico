@@ -13,8 +13,28 @@ import {
   FOLDER_COMPARE_EXCLUDED,
   FolderComparison,
   FolderSnapshot,
+  parseExtraExclusions,
   toDisplayPath,
 } from './lib/folder-compare';
+
+/** Preferencia del usuario en este navegador (comodidad: si no hay almacenamiento, no se recuerda). */
+const EXTRA_EXCLUDED_KEY = 'devhub.folderCompare.extraExcluded';
+
+function readExtraExcluded(): string {
+  try {
+    return localStorage.getItem(EXTRA_EXCLUDED_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function saveExtraExcluded(text: string): void {
+  try {
+    localStorage.setItem(EXTRA_EXCLUDED_KEY, text);
+  } catch {
+    // Sin almacenamiento disponible (modo privado, bloqueado): no se recuerda.
+  }
+}
 
 type Side = 'origin' | 'target';
 type ResultTab = 'modified' | 'onlyInOrigin' | 'onlyInTarget';
@@ -109,12 +129,33 @@ const TAB_LABELS: Record<ResultTab, string> = {
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-          <span>Se ignoran:</span>
+          <span>Se ignoran siempre:</span>
           @for (name of excluded; track name) {
             <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono dark:bg-slate-800">{{
               name
             }}</code>
           }
+        </div>
+
+        <div>
+          <label for="extra-excluded" class="label"
+            >Ignorar también estas carpetas (opcional)</label
+          >
+          <input
+            id="extra-excluded"
+            class="input mt-1 font-mono"
+            placeholder="Release, packages, TestResults"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="extra-excluded-hint"
+            [value]="extraText()"
+            [disabled]="comparing()"
+            (input)="onExtraExcluded(inputValue($event))"
+          />
+          <p id="extra-excluded-hint" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Nombres de carpeta separados por comas; se ignoran en cualquier nivel. Este navegador
+            los recordará.
+          </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
@@ -277,6 +318,7 @@ export class FolderCompareTool {
   protected readonly error = signal<string | null>(null);
   protected readonly tab = signal<ResultTab>('modified');
   protected readonly filter = signal('');
+  protected readonly extraText = signal(readExtraExcluded());
 
   private abort: AbortController | null = null;
 
@@ -328,6 +370,13 @@ export class FolderCompareTool {
     }
   }
 
+  /** Cambiar las exclusiones invalida el resultado anterior (no hace falta volver a elegir carpetas). */
+  protected onExtraExcluded(text: string): void {
+    this.extraText.set(text);
+    saveExtraExcluded(text);
+    this.result.set(null);
+  }
+
   protected swap(): void {
     this.folders.update(({ origin, target }) => ({ origin: target, target: origin }));
     this.result.set(null);
@@ -347,6 +396,7 @@ export class FolderCompareTool {
       const result = await this.service.compare(origin, target, {
         signal: this.abort.signal,
         onProgress: (progress) => this.progress.set(progress),
+        extraExcluded: parseExtraExclusions(this.extraText()),
       });
       this.result.set(result);
       this.tab.set('modified');

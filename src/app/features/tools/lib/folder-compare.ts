@@ -5,7 +5,10 @@
  * FolderSnapshot. Nada se envía a ningún servidor.
  */
 
-/** Carpetas que se ignoran en cualquier nivel (pesadas o autogeneradas). */
+/**
+ * Carpetas que se ignoran siempre, en cualquier nivel (pesadas o autogeneradas):
+ * Node/Angular, IDE, control de versiones, documentación y compilación .NET.
+ */
 export const FOLDER_COMPARE_EXCLUDED = [
   'node_modules',
   '.angular',
@@ -15,9 +18,32 @@ export const FOLDER_COMPARE_EXCLUDED = [
   '.git',
   '.idea',
   'docs',
+  'bin',
+  'obj',
+  'Debug',
+  '.vs',
 ] as const;
 
 const EXCLUDED = new Set<string>(FOLDER_COMPARE_EXCLUDED.map((name) => name.toLowerCase()));
+
+/** Máximo de carpetas adicionales que puede indicar el usuario. */
+export const EXTRA_EXCLUDED_MAX = 30;
+
+/**
+ * Carpetas adicionales escritas por el usuario ("Release, packages; TestResults"):
+ * separadas por comas, punto y coma o espacios; sin barras ni duplicados.
+ */
+export function parseExtraExclusions(text: string): string[] {
+  const names = text
+    .split(/[,;\s]+/)
+    .map((name) => name.replace(/^[\\/]+|[\\/]+$/g, '').trim())
+    .filter((name) => name && !/[\\/]/.test(name));
+  // Se conserva la primera aparición (con sus mayúsculas) de cada nombre.
+  const seen = new Set<string>();
+  return names
+    .filter((name) => !seen.has(name.toLowerCase()) && seen.add(name.toLowerCase()))
+    .slice(0, EXTRA_EXCLUDED_MAX);
+}
 
 /** Archivos que se leen a la vez al calcular hashes. */
 const HASH_CONCURRENCY = 4;
@@ -54,15 +80,20 @@ export interface CompareProgress {
 export interface CompareOptions {
   signal?: AbortSignal;
   onProgress?: (progress: CompareProgress) => void;
+  /** Carpetas a ignorar además de FOLDER_COMPARE_EXCLUDED. */
+  extraExcluded?: readonly string[];
   /** Inyectable para pruebas; por defecto SHA-256 con Web Crypto. */
   hash?: (data: ArrayBuffer) => Promise<string>;
 }
 
 /** ¿Está la ruta (o alguna carpeta que la contiene) en la lista de exclusiones? */
-export function isExcludedPath(path: string): boolean {
+export function isExcludedPath(path: string, extraExcluded: readonly string[] = []): boolean {
+  const extra = new Set(extraExcluded.map((name) => name.toLowerCase()));
   const segments = path.split(/[\\/]/).filter(Boolean);
   // El último segmento es el archivo: solo se excluyen carpetas.
-  return segments.slice(0, -1).some((segment) => EXCLUDED.has(segment.toLowerCase()));
+  return segments
+    .slice(0, -1)
+    .some((segment) => EXCLUDED.has(segment.toLowerCase()) || extra.has(segment.toLowerCase()));
 }
 
 export function isExcludedFolder(name: string): boolean {
@@ -96,14 +127,15 @@ export async function compareFolders(
 ): Promise<FolderComparison> {
   const started = performance.now();
   const hash = options.hash ?? sha256Hex;
+  const extra = options.extraExcluded ?? [];
   const originFiles = new Map(
     origin.files
-      .filter((file) => !isExcludedPath(file.path))
+      .filter((file) => !isExcludedPath(file.path, extra))
       .map((file) => [keyOf(file.path), file]),
   );
   const targetFiles = new Map(
     target.files
-      .filter((file) => !isExcludedPath(file.path))
+      .filter((file) => !isExcludedPath(file.path, extra))
       .map((file) => [keyOf(file.path), file]),
   );
 

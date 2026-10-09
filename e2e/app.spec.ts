@@ -322,7 +322,7 @@ test.describe('Herramientas', () => {
 });
 
 test.describe('Comparador de carpetas', () => {
-  test('lista los archivos modificados por contenido e ignora node_modules', async ({
+  test('lista los modificados por contenido e ignora node_modules, bin y las carpetas extra', async ({
     page,
     favorites: _mock,
     consoleErrors: _errors,
@@ -337,10 +337,14 @@ test.describe('Comparador de carpetas', () => {
     write('fuente1', 'src/app/igual.ts', 'sin cambios');
     write('fuente1', 'supabase/migrations/001.sql', 'select 1;');
     write('fuente1', 'node_modules/lib/index.js', 'uno');
+    write('fuente1', 'Claro.Base/bin/Debug/Claro.Base.pdb', 'pdb uno');
+    write('fuente1', 'Claro.Base/Release/salida.txt', 'r1');
     write('fuente2', 'src/app/app.ts', 'export const a = 2;');
     write('fuente2', 'src/app/igual.ts', 'sin cambios');
     write('fuente2', 'supabase/migrations/001.sql', 'select 2;');
     write('fuente2', 'node_modules/lib/index.js', 'dos');
+    write('fuente2', 'Claro.Base/bin/Debug/Claro.Base.pdb', 'pdb dos');
+    write('fuente2', 'Claro.Base/Release/salida.txt', 'r2');
 
     try {
       // Fuerza la alternativa <input webkitdirectory>, automatizable en Playwright.
@@ -351,6 +355,7 @@ test.describe('Comparador de carpetas', () => {
       const inputs = page.locator('input[type=file][webkitdirectory]');
       await inputs.nth(0).setInputFiles(join(root, 'fuente1'));
       await inputs.nth(1).setInputFiles(join(root, 'fuente2'));
+      await page.getByLabel('Ignorar también estas carpetas (opcional)').fill('Release');
       await page.getByRole('button', { name: 'Comparar carpetas' }).click();
 
       await expect(page.getByTestId('modified-count')).toHaveText('2');
@@ -359,6 +364,7 @@ test.describe('Comparador de carpetas', () => {
       await expect(list).toContainText('\\supabase\\migrations\\001.sql');
       await expect(list).not.toContainText('igual.ts');
       await expect(list).not.toContainText('node_modules');
+      await expect(list).not.toContainText('Claro.Base');
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

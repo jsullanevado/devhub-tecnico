@@ -3,6 +3,7 @@ import {
   FolderSnapshot,
   isExcludedFolder,
   isExcludedPath,
+  parseExtraExclusions,
   sha256Hex,
   toDisplayPath,
 } from './folder-compare';
@@ -28,10 +29,35 @@ describe('isExcludedPath / isExcludedFolder', () => {
     expect(isExcludedFolder('.git')).toBe(true);
   });
 
+  it('excluye las carpetas de compilación .NET (bin, obj, Debug) y .vs', () => {
+    expect(isExcludedPath('Claro.Base/bin/Release/Claro.Base.pdb')).toBe(true);
+    expect(isExcludedPath('Claro.Base/obj/Debug/x.cache')).toBe(true);
+    expect(isExcludedPath('Proyecto/debug/log.txt')).toBe(true);
+    expect(isExcludedPath('.vs/Proyecto/v17/.suo')).toBe(true);
+    expect(isExcludedPath('Claro.Base/Clases/Cliente.cs')).toBe(false);
+  });
+
+  it('admite carpetas adicionales indicadas por el usuario', () => {
+    expect(isExcludedPath('Proyecto/Release/app.dll', ['Release'])).toBe(true);
+    expect(isExcludedPath('Proyecto/Release/app.dll')).toBe(false);
+  });
+
   it('no excluye archivos que solo se llaman igual que una carpeta excluida', () => {
     expect(isExcludedPath('src/app/app.ts')).toBe(false);
     expect(isExcludedPath('scripts/dist')).toBe(false);
     expect(isExcludedPath('src/docs-helper.ts')).toBe(false);
+  });
+});
+
+describe('parseExtraExclusions', () => {
+  it('separa por comas, punto y coma o espacios, quita barras y duplicados', () => {
+    expect(parseExtraExclusions(' Release, packages;TestResults  \\release\\ /tmp/ ')).toEqual([
+      'Release',
+      'packages',
+      'TestResults',
+      'tmp',
+    ]);
+    expect(parseExtraExclusions('a/b, , ')).toEqual([]);
   });
 });
 
@@ -59,6 +85,7 @@ describe('compareFolders', () => {
     'src/app/same-size.ts': 'AAAA',
     'src/only-origin.ts': 'x',
     'node_modules/lib/index.js': 'ignorado',
+    'Proyecto/bin/Debug/app.pdb': 'binario 1',
   });
   const target = folder('fuente2', {
     'src/app/app.ts': 'cambiado y más largo',
@@ -66,6 +93,7 @@ describe('compareFolders', () => {
     'src/app/same-size.ts': 'BBBB',
     'src/only-target.ts': 'y',
     'node_modules/lib/index.js': 'distinto pero ignorado',
+    'Proyecto/bin/Debug/app.pdb': 'binario 2 distinto',
   });
 
   it('detecta modificados por contenido (también con el mismo tamaño) y archivos únicos', async () => {
@@ -90,6 +118,12 @@ describe('compareFolders', () => {
     // same.ts y same-size.ts: 2 archivos × 2 carpetas. app.ts difiere en tamaño: sin hash.
     expect(hashed).toHaveLength(4);
     expect(progress.at(-1)).toBe(3);
+  });
+
+  it('ignora también las carpetas adicionales', async () => {
+    const result = await compareFolders(origin, target, { extraExcluded: ['app'] });
+    expect(result.modified).toEqual([]);
+    expect(result.compared).toBe(0);
   });
 
   it('se puede cancelar', async () => {

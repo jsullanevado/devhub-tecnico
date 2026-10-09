@@ -192,7 +192,11 @@ origen** o **solo en el destino**. Puedes filtrar la lista, **copiarla** o **des
 - La comparación es por **contenido** (hash SHA-256), no por fechas: un archivo copiado sin
   cambios no aparece como modificado.
 - Se ignoran siempre las carpetas `node_modules`, `.angular`, `dist`, `.vscode`, `coverage`,
-  `.git`, `.idea` y `docs`.
+  `.git`, `.idea`, `docs` y las de compilación de .NET / Visual Studio: `bin`, `obj`, `Debug`
+  y `.vs`.
+- En **Ignorar también estas carpetas** puedes añadir otras, separadas por comas (por ejemplo
+  `Release, packages, TestResults`). Se aplican en cualquier nivel, sin volver a elegir las
+  carpetas, y el navegador las recuerda para la próxima vez.
 - Los archivos **no se suben a ningún servidor**: se leen y comparan en tu navegador.
 - Funciona mejor en **Chrome o Edge**. En otros navegadores, el cuadro para elegir la carpeta
   puede decir «subir»; aun así, nada sale de tu equipo.
