@@ -7,7 +7,8 @@
 
 /**
  * Carpetas que se ignoran siempre, en cualquier nivel (pesadas o autogeneradas):
- * Node/Angular, IDE, control de versiones, documentación y compilación .NET.
+ * Node/Angular, IDE, control de versiones, documentación, compilación .NET y
+ * paquetes NuGet.
  */
 export const FOLDER_COMPARE_EXCLUDED = [
   'node_modules',
@@ -22,6 +23,7 @@ export const FOLDER_COMPARE_EXCLUDED = [
   'obj',
   'Debug',
   '.vs',
+  'packages',
 ] as const;
 
 const EXCLUDED = new Set<string>(FOLDER_COMPARE_EXCLUDED.map((name) => name.toLowerCase()));

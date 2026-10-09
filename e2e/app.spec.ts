@@ -345,6 +345,7 @@ test.describe('Comparador de carpetas', () => {
     write('fuente2', 'node_modules/lib/index.js', 'dos');
     write('fuente2', 'Claro.Base/bin/Debug/Claro.Base.pdb', 'pdb dos');
     write('fuente2', 'Claro.Base/Release/salida.txt', 'r2');
+    write('fuente2', 'src/app/nuevo.ts', 'solo en destino');
 
     try {
       // Fuerza la alternativa <input webkitdirectory>, automatizable en Playwright.
@@ -365,6 +366,19 @@ test.describe('Comparador de carpetas', () => {
       await expect(list).not.toContainText('igual.ts');
       await expect(list).not.toContainText('node_modules');
       await expect(list).not.toContainText('Claro.Base');
+
+      // Pestaña por defecto: nuevos y modificados juntos, cada uno con su etiqueta.
+      await expect(
+        page.getByRole('tab', { name: 'Nuevos y modificados (3)', selected: true }),
+      ).toBeVisible();
+      await expect(list.getByRole('listitem').filter({ hasText: 'nuevo.ts' })).toContainText(
+        'Nuevo',
+      );
+      await expect(list.getByRole('listitem').filter({ hasText: 'app.ts' })).toContainText(
+        'Modificado',
+      );
+      await page.getByRole('tab', { name: 'Modificados (2)' }).click();
+      await expect(list).not.toContainText('nuevo.ts');
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

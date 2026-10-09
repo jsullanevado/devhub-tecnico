@@ -185,17 +185,25 @@ fuente original y la modificada antes de un pase).
 4. Pulsa **Comparar carpetas**.
 
 El resultado muestra el **total de archivos modificados** y la lista de rutas en el formato
-`\src\app\app.component.ts`. En las pestañas también ves los archivos que están **solo en el
-origen** o **solo en el destino**. Puedes filtrar la lista, **copiarla** o **descargarla como
-.txt**.
+`\src\app\app.component.ts`, repartida en pestañas:
+
+| Pestaña | Contenido |
+|---|---|
+| **Nuevos y modificados** (por defecto) | Todo lo que cambió en el destino, mezclado y ordenado por ruta, con la etiqueta **Modificado** o **Nuevo** en cada archivo. |
+| Modificados | Archivos que están en ambas carpetas con contenido distinto. |
+| Solo en origen | Archivos que ya no están en el destino. |
+| Solo en destino | Archivos nuevos en el destino. |
+
+Puedes filtrar la lista, **copiarla** o **descargarla como .txt**. Se copian solo las rutas, una
+por línea (sin las etiquetas), listas para pegar en un pase.
 
 - La comparación es por **contenido** (hash SHA-256), no por fechas: un archivo copiado sin
   cambios no aparece como modificado.
 - Se ignoran siempre las carpetas `node_modules`, `.angular`, `dist`, `.vscode`, `coverage`,
-  `.git`, `.idea`, `docs` y las de compilación de .NET / Visual Studio: `bin`, `obj`, `Debug`
-  y `.vs`.
+  `.git`, `.idea`, `docs` y las de compilación de .NET / Visual Studio: `bin`, `obj`, `Debug`,
+  `.vs` y `packages` (paquetes NuGet).
 - En **Ignorar también estas carpetas** puedes añadir otras, separadas por comas (por ejemplo
-  `Release, packages, TestResults`). Se aplican en cualquier nivel, sin volver a elegir las
+  `Release, TestResults`). Se aplican en cualquier nivel, sin volver a elegir las
   carpetas, y el navegador las recuerda para la próxima vez.
 - Los archivos **no se suben a ningún servidor**: se leen y comparan en tu navegador.
 - Funciona mejor en **Chrome o Edge**. En otros navegadores, el cuadro para elegir la carpeta

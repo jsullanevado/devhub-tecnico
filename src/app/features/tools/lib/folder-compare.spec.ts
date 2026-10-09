@@ -29,11 +29,12 @@ describe('isExcludedPath / isExcludedFolder', () => {
     expect(isExcludedFolder('.git')).toBe(true);
   });
 
-  it('excluye las carpetas de compilación .NET (bin, obj, Debug) y .vs', () => {
+  it('excluye las carpetas de compilación .NET (bin, obj, Debug), .vs y packages', () => {
     expect(isExcludedPath('Claro.Base/bin/Release/Claro.Base.pdb')).toBe(true);
     expect(isExcludedPath('Claro.Base/obj/Debug/x.cache')).toBe(true);
     expect(isExcludedPath('Proyecto/debug/log.txt')).toBe(true);
     expect(isExcludedPath('.vs/Proyecto/v17/.suo')).toBe(true);
+    expect(isExcludedPath('packages/Newtonsoft.Json.13.0.1/lib/x.dll')).toBe(true);
     expect(isExcludedPath('Claro.Base/Clases/Cliente.cs')).toBe(false);
   });
 

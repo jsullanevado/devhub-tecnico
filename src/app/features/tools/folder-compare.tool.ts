@@ -37,7 +37,17 @@ function saveExtraExcluded(text: string): void {
 }
 
 type Side = 'origin' | 'target';
-type ResultTab = 'modified' | 'onlyInOrigin' | 'onlyInTarget';
+type ResultTab = 'changed' | 'modified' | 'onlyInOrigin' | 'onlyInTarget';
+type ChangeKind = 'modified' | 'new';
+
+interface ResultRow {
+  /** Ruta en formato "\carpeta\archivo". */
+  path: string;
+  /** Solo en la pestaña "Nuevos y modificados". */
+  kind?: ChangeKind;
+}
+
+const KIND_LABELS: Record<ChangeKind, string> = { modified: 'Modificado', new: 'Nuevo' };
 
 const SIDE_LABELS: Record<Side, string> = {
   origin: 'Ruta Fuente 1 (Origen)',
@@ -45,6 +55,7 @@ const SIDE_LABELS: Record<Side, string> = {
 };
 
 const TAB_LABELS: Record<ResultTab, string> = {
+  changed: 'Nuevos y modificados',
   modified: 'Modificados',
   onlyInOrigin: 'Solo en origen',
   onlyInTarget: 'Solo en destino',
@@ -144,7 +155,7 @@ const TAB_LABELS: Record<ResultTab, string> = {
           <input
             id="extra-excluded"
             class="input mt-1 font-mono"
-            placeholder="Release, packages, TestResults"
+            placeholder="Release, TestResults"
             autocomplete="off"
             spellcheck="false"
             aria-describedby="extra-excluded-hint"
@@ -244,7 +255,7 @@ const TAB_LABELS: Record<ResultTab, string> = {
                 aria-controls="compare-list"
                 (click)="selectTab(item)"
               >
-                {{ tabLabels[item] }} ({{ result[item].length }})
+                {{ tabLabels[item] }} ({{ tabCount(result, item) }})
               </button>
             }
           </div>
@@ -273,6 +284,8 @@ const TAB_LABELS: Record<ResultTab, string> = {
             <p class="mt-4 text-sm text-slate-500 dark:text-slate-400" role="status">
               @if (filter()) {
                 Ninguna ruta coincide con el filtro.
+              } @else if (tab() === 'changed') {
+                No hay archivos nuevos ni modificados en el destino.
               } @else if (tab() === 'modified') {
                 No hay archivos modificados: los archivos comunes tienen el mismo contenido.
               } @else {
@@ -285,8 +298,21 @@ const TAB_LABELS: Record<ResultTab, string> = {
               role="tabpanel"
               class="mt-4 max-h-[60vh] overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-sm dark:border-slate-800 dark:bg-slate-950"
             >
-              @for (path of visible(); track path) {
-                <li class="break-all py-0.5">{{ path }}</li>
+              @for (row of visible(); track row.path) {
+                <li class="flex items-start gap-2 py-0.5">
+                  @if (row.kind) {
+                    <span
+                      class="badge w-24 shrink-0 justify-center font-sans"
+                      [class]="
+                        row.kind === 'new'
+                          ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300'
+                          : 'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300'
+                      "
+                      >{{ kindLabels[row.kind] }}</span
+                    >
+                  }
+                  <span class="min-w-0 break-all">{{ row.path }}</span>
+                </li>
               }
             </ol>
           }
@@ -301,8 +327,14 @@ export class FolderCompareTool {
 
   protected readonly sides: readonly Side[] = ['origin', 'target'];
   protected readonly sideLabels = SIDE_LABELS;
-  protected readonly tabs: readonly ResultTab[] = ['modified', 'onlyInOrigin', 'onlyInTarget'];
+  protected readonly tabs: readonly ResultTab[] = [
+    'changed',
+    'modified',
+    'onlyInOrigin',
+    'onlyInTarget',
+  ];
   protected readonly tabLabels = TAB_LABELS;
+  protected readonly kindLabels = KIND_LABELS;
   protected readonly excluded = FOLDER_COMPARE_EXCLUDED;
   protected readonly inputValue = inputValue;
 
@@ -316,7 +348,7 @@ export class FolderCompareTool {
   protected readonly progress = signal<CompareProgress | null>(null);
   protected readonly result = signal<FolderComparison | null>(null);
   protected readonly error = signal<string | null>(null);
-  protected readonly tab = signal<ResultTab>('modified');
+  protected readonly tab = signal<ResultTab>('changed');
   protected readonly filter = signal('');
   protected readonly extraText = signal(readExtraExcluded());
 
@@ -326,18 +358,37 @@ export class FolderCompareTool {
   protected readonly canCompare = computed(
     () => !this.busy() && !!this.folders().origin && !!this.folders().target,
   );
-  /** Rutas de la pestaña activa, filtradas y en formato "\carpeta\archivo". */
-  protected readonly visible = computed(() => {
+  /** Filas de la pestaña activa, filtradas y con rutas en formato "\carpeta\archivo". */
+  protected readonly visible = computed<ResultRow[]>(() => {
     const result = this.result();
     if (!result) {
       return [];
     }
     const filter = this.filter().trim().toLowerCase();
-    return result[this.tab()]
-      .map(toDisplayPath)
-      .filter((path) => !filter || path.toLowerCase().includes(filter));
+    const tab = this.tab();
+    const rows: ResultRow[] =
+      tab === 'changed'
+        ? [
+            ...result.modified.map((path) => ({ path, kind: 'modified' as const })),
+            ...result.onlyInTarget.map((path) => ({ path, kind: 'new' as const })),
+          ]
+            .sort((a, b) => a.path.localeCompare(b.path, 'es', { sensitivity: 'base' }))
+            .map((row) => ({ ...row, path: toDisplayPath(row.path) }))
+        : result[tab].map((path) => ({ path: toDisplayPath(path) }));
+    return filter ? rows.filter((row) => row.path.toLowerCase().includes(filter)) : rows;
   });
-  protected readonly listText = computed(() => this.visible().join('\n'));
+  /** Solo rutas, una por línea: listas para pegar en un pase o una lista de despliegue. */
+  protected readonly listText = computed(() =>
+    this.visible()
+      .map((row) => row.path)
+      .join('\n'),
+  );
+
+  protected tabCount(result: FolderComparison, tab: ResultTab): number {
+    return tab === 'changed'
+      ? result.modified.length + result.onlyInTarget.length
+      : result[tab].length;
+  }
 
   protected async pick(side: Side, fallbackInput: HTMLInputElement): Promise<void> {
     if (!this.service.supportsDirectoryPicker) {
@@ -399,7 +450,7 @@ export class FolderCompareTool {
         extraExcluded: parseExtraExclusions(this.extraText()),
       });
       this.result.set(result);
-      this.tab.set('modified');
+      this.tab.set('changed');
       this.filter.set('');
     } catch (error) {
       if (!this.abort.signal.aborted) {
