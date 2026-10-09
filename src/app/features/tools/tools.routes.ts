@@ -31,4 +31,9 @@ export const TOOLS_ROUTES: Routes = [
     title: 'Formateador SOAP',
     loadComponent: () => import('./soap.tool').then((m) => m.SoapTool),
   },
+  {
+    path: 'folder-compare',
+    title: 'Comparador de carpetas',
+    loadComponent: () => import('./folder-compare.tool').then((m) => m.FolderCompareTool),
+  },
 ];

@@ -39,4 +39,11 @@ export const TOOLS: readonly ToolEntry[] = [
     description: 'Formatea y analiza sobres SOAP 1.1/1.2: operación, cabecera y Fault.',
     icon: 'code',
   },
+  {
+    path: 'folder-compare',
+    title: 'Comparador de carpetas',
+    description:
+      'Compara dos carpetas por contenido (SHA-256) y lista los archivos modificados, sin subir nada.',
+    icon: 'compare',
+  },
 ];

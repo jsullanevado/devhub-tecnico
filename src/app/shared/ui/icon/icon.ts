@@ -46,6 +46,7 @@ const ICON_PATHS = {
   inbox: 'M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5',
   refresh: 'M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5',
   mail: 'M3 5h18v14H3zM3 6l9 7 9-7',
+  compare: 'M4 4h7v16H4zM13 4h7v16h-7zM6.5 8h2M6.5 12h2M15.5 8h2M15.5 12h2M15.5 16h2',
   plug: 'M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4',
   key: 'M15 7a4 4 0 1 0-3.9 5L4 19v2h3v-2h2v-2h2l1.1-1.1A4 4 0 0 0 15 7zM16 7.5h.01',
   link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',

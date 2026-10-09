@@ -162,7 +162,7 @@ para invocarlos. Una ficha por servicio, con una o varias **operaciones**.
 
 ### 4.6 Herramientas
 
-Utilidades que funcionan en tu navegador, sin guardar nada:
+Utilidades que funcionan en tu navegador, sin enviar ni guardar nada:
 
 | Herramienta | Uso |
 |---|---|
@@ -171,6 +171,31 @@ Utilidades que funcionan en tu navegador, sin guardar nada:
 | Tarjetas de prueba | Números de tarjetas de sandbox de pasarelas de pago y validador Luhn. |
 | Formateador XML | Formatea, minifica y comprueba que un XML esté bien formado. |
 | Formateador SOAP | Formatea un sobre SOAP 1.1/1.2 y muestra operación, cabecera y Fault. |
+| Comparador de carpetas | Lista los archivos cuyo contenido cambió entre dos carpetas (ver abajo). |
+
+#### Comparador de carpetas
+
+Sirve para saber qué archivos cambiaron entre dos versiones de un proyecto (por ejemplo, la
+fuente original y la modificada antes de un pase).
+
+1. Ve a **Herramientas → Comparador de carpetas**.
+2. En **Ruta Fuente 1 (Origen)** pulsa **Seleccionar carpeta** y elige la carpeta original;
+   el navegador te pedirá permiso para leerla.
+3. Haz lo mismo con **Ruta Fuente 2 (Destino)**. El botón ⟳ intercambia origen y destino.
+4. Pulsa **Comparar carpetas**.
+
+El resultado muestra el **total de archivos modificados** y la lista de rutas en el formato
+`\src\app\app.component.ts`. En las pestañas también ves los archivos que están **solo en el
+origen** o **solo en el destino**. Puedes filtrar la lista, **copiarla** o **descargarla como
+.txt**.
+
+- La comparación es por **contenido** (hash SHA-256), no por fechas: un archivo copiado sin
+  cambios no aparece como modificado.
+- Se ignoran siempre las carpetas `node_modules`, `.angular`, `dist`, `.vscode`, `coverage`,
+  `.git`, `.idea` y `docs`.
+- Los archivos **no se suben a ningún servidor**: se leen y comparan en tu navegador.
+- Funciona mejor en **Chrome o Edge**. En otros navegadores, el cuadro para elegir la carpeta
+  puede decir «subir»; aun así, nada sale de tu equipo.
 
 ---
 

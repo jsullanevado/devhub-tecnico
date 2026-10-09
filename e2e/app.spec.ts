@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { expect, login, openNavIfCollapsed, test } from './support/fixtures';
 import { SCRIPTS, SERVICES } from './support/supabase-mock';
 
@@ -315,5 +318,49 @@ test.describe('Herramientas', () => {
     await page.getByLabel('XML de entrada').fill('<a><b></a>');
     await page.getByRole('button', { name: 'Solo validar' }).click();
     await expect(page.getByText(/XML mal formado/)).toBeVisible();
+  });
+});
+
+test.describe('Comparador de carpetas', () => {
+  test('lista los archivos modificados por contenido e ignora node_modules', async ({
+    page,
+    favorites: _mock,
+    consoleErrors: _errors,
+  }) => {
+    const root = mkdtempSync(join(tmpdir(), 'devhub-compare-'));
+    const write = (folder: string, path: string, content: string) => {
+      const file = join(root, folder, ...path.split('/'));
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(file, content);
+    };
+    write('fuente1', 'src/app/app.ts', 'export const a = 1;');
+    write('fuente1', 'src/app/igual.ts', 'sin cambios');
+    write('fuente1', 'supabase/migrations/001.sql', 'select 1;');
+    write('fuente1', 'node_modules/lib/index.js', 'uno');
+    write('fuente2', 'src/app/app.ts', 'export const a = 2;');
+    write('fuente2', 'src/app/igual.ts', 'sin cambios');
+    write('fuente2', 'supabase/migrations/001.sql', 'select 2;');
+    write('fuente2', 'node_modules/lib/index.js', 'dos');
+
+    try {
+      // Fuerza la alternativa <input webkitdirectory>, automatizable en Playwright.
+      await page.addInitScript(() => {
+        delete (window as { showDirectoryPicker?: unknown }).showDirectoryPicker;
+      });
+      await login(page, '/tools/folder-compare');
+      const inputs = page.locator('input[type=file][webkitdirectory]');
+      await inputs.nth(0).setInputFiles(join(root, 'fuente1'));
+      await inputs.nth(1).setInputFiles(join(root, 'fuente2'));
+      await page.getByRole('button', { name: 'Comparar carpetas' }).click();
+
+      await expect(page.getByTestId('modified-count')).toHaveText('2');
+      const list = page.locator('#compare-list');
+      await expect(list).toContainText('\\src\\app\\app.ts');
+      await expect(list).toContainText('\\supabase\\migrations\\001.sql');
+      await expect(list).not.toContainText('igual.ts');
+      await expect(list).not.toContainText('node_modules');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
