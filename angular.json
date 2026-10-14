@@ -19,6 +19,20 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": [
+              "docxtemplater",
+              "pizzip",
+              "exceljs",
+              "jszip",
+              "sha.js",
+              "async-lock",
+              "clean-git-ref",
+              "crc-32",
+              "pako",
+              "pify",
+              "ignore",
+              "diff3"
+            ],
             "assets": [
               {
                 "glob": "**/*",

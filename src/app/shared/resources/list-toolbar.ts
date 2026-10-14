@@ -12,6 +12,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ResourceScope, ResourceSortField } from '../../core/models';
 import { TagInput } from '../forms/tag-input';
 import { SearchBox } from '../ui/search-box/search-box';
+import { ViewToggle } from './view-mode';
 import { oneOf, SCOPE_OPTIONS, SORT_OPTIONS } from './list-query';
 
 const SCOPES = SCOPE_OPTIONS.map((option) => option.value);
@@ -23,7 +24,7 @@ const SORTS = SORT_OPTIONS.map((option) => option.value);
  */
 @Component({
   selector: 'app-list-toolbar',
-  imports: [ReactiveFormsModule, SearchBox, TagInput],
+  imports: [ReactiveFormsModule, SearchBox, TagInput, ViewToggle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -60,6 +61,9 @@ const SORTS = SORT_OPTIONS.map((option) => option.value);
               Limpiar filtros
             </button>
           }
+          @if (viewKey(); as key) {
+            <app-view-toggle [viewKey]="key" />
+          }
           <label class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             Ordenar
             <select class="input w-auto" (change)="onSort($event)">
@@ -82,6 +86,8 @@ export class ListToolbar {
   readonly scope = input<ResourceScope>('all');
   readonly sort = input<ResourceSortField>('updated_at');
   readonly hasFilters = input(false);
+  /** Módulo para el selector Tarjetas / Lista (sin él no se muestra). */
+  readonly viewKey = input<string>();
 
   readonly searchChange = output<string>();
   readonly tagsChange = output<string[]>();

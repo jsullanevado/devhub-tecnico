@@ -4,45 +4,95 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { DashboardService } from '../../core/data/dashboard.service';
 import { FavoritesService } from '../../core/data/favorites.service';
+import { RelationsService } from '../../core/data/relations.service';
 import {
   DashboardRecentItem,
   RESOURCE_TYPE_LABELS,
-  ResourceType,
   STORAGE_DANGER_PERCENT,
   STORAGE_QUOTA_BYTES,
   STORAGE_WARN_PERCENT,
   storageUsagePercent,
 } from '../../core/models';
-import { APP_PATHS, RESOURCE_PATHS } from '../../core/routing/app-paths';
+import { RESOURCE_PATHS } from '../../core/routing/app-paths';
 import { LayoutService } from '../../layout/layout.service';
-import { visibleSections } from '../../layout/navigation';
+import { buildObjectRows, buildTraceRows } from '../../shared/relations/relations';
 import { createAsyncLoader } from '../../shared/resources/async-loader';
 import { Alert } from '../../shared/ui/alert/alert';
 import { VisibilityBadge } from '../../shared/ui/badges/badges';
-import { Icon } from '../../shared/ui/icon/icon';
+import { Icon, IconName } from '../../shared/ui/icon/icon';
 import { Spinner } from '../../shared/ui/spinner/spinner';
 import { formatBytes } from '../../shared/utils/format';
 import { RESOURCE_TYPE_ICONS } from '../../shared/resources/resource-type-icons';
 
-const PATH_TYPE = Object.fromEntries(
-  Object.entries(RESOURCE_PATHS).map(([type, path]) => [path, type]),
-) as Record<string, ResourceType>;
+const FAVORITES_PREVIEW = 6;
 
-const FAVORITES_PREVIEW = 5;
+interface QuickAction {
+  label: string;
+  path: string;
+  icon: IconName;
+}
+
+interface Stat {
+  label: string;
+  value: number;
+  icon: IconName;
+  path: string;
+  query?: Record<string, string>;
+  /** Para crear el primero cuando no hay ninguno. */
+  createPath?: string;
+}
+
+interface Pending {
+  count: number;
+  label: string;
+  hint: string;
+  path: string;
+  query?: Record<string, string>;
+}
+
+const QUICK_ACTIONS: QuickAction[] = [
+  { label: 'Servicio o DataPower', path: '/services/new', icon: 'plug' },
+  { label: 'Conexión de BD', path: '/databases/new', icon: 'database' },
+  { label: 'Script', path: '/scripts/new', icon: 'code' },
+  { label: 'Carga masiva', path: '/bulk-import', icon: 'upload' },
+  { label: 'Generar MDI', path: '/mdi', icon: 'file-code' },
+];
+
+function greetingFor(hour: number): string {
+  return hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+}
 
 @Component({
   selector: 'app-dashboard-page',
   imports: [DatePipe, DecimalPipe, RouterLink, Alert, Icon, Spinner, VisibilityBadge],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="mx-auto max-w-6xl space-y-8">
+    <div class="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 class="text-2xl font-semibold">Hola{{ name() ? ', ' + name() : '' }}</h1>
+        <h1 class="text-2xl font-semibold">{{ greeting }}{{ name() ? ', ' + name() : '' }}</h1>
         <p class="mt-1 text-slate-600 dark:text-slate-400">
           Base de conocimiento técnico de tu equipo. Pulsa <kbd class="kbd">Ctrl K</kbd> o
           <kbd class="kbd">/</kbd> para buscar.
         </p>
       </header>
+
+      <nav aria-label="Accesos rápidos" class="flex flex-wrap gap-2">
+        @for (action of quickActions; track action.path) {
+          <a
+            [routerLink]="action.path"
+            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/50 dark:hover:bg-indigo-500/10"
+          >
+            <app-icon
+              [name]="action.icon"
+              iconClass="size-4 text-indigo-600 dark:text-indigo-400"
+            />
+            @if (action.path.endsWith('/new')) {
+              <span class="text-slate-400">+</span>
+            }
+            {{ action.label }}
+          </a>
+        }
+      </nav>
 
       @if (summaryState().status === 'error') {
         <app-alert type="warning">
@@ -83,36 +133,35 @@ const FAVORITES_PREVIEW = 5;
         }
       }
 
-      <section aria-labelledby="modules-title">
-        <h2 id="modules-title" class="sr-only">Módulos</h2>
-        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          @for (item of modules(); track item.path) {
+      <section aria-labelledby="stats-title">
+        <h2 id="stats-title" class="sr-only">Resumen</h2>
+        <ul class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8" data-testid="stats">
+          @for (stat of stats(); track stat.label) {
             <li>
-              <a
-                [routerLink]="item.path"
-                class="card flex h-full gap-4 p-5 transition hover:border-indigo-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-indigo-600 dark:hover:border-indigo-700"
-              >
-                <app-icon
-                  [name]="item.icon"
-                  iconClass="mt-0.5 size-6 text-indigo-600 dark:text-indigo-400"
-                />
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-baseline justify-between gap-2">
-                    <h3 class="font-medium">{{ item.label }}</h3>
-                    @if (item.count !== null) {
-                      <span class="text-2xl font-semibold tabular-nums">{{ item.count }}</span>
-                    }
-                  </div>
-                  <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    {{ item.description }}
-                  </p>
-                  @if (item.mine !== null) {
-                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                      {{ item.mine }} {{ item.mine === 1 ? 'tuyo' : 'tuyos' }}
-                    </p>
-                  }
-                </div>
-              </a>
+              @if (stat.value === 0 && stat.createPath) {
+                <a
+                  [routerLink]="stat.createPath"
+                  class="flex h-full flex-col rounded-lg border border-dashed border-slate-300 p-3 text-slate-500 transition hover:border-indigo-400 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-indigo-600 dark:border-slate-700 dark:text-slate-400 dark:hover:text-indigo-400"
+                >
+                  <span class="flex items-center gap-1.5 text-xs">
+                    <app-icon [name]="stat.icon" iconClass="size-3.5" /> {{ stat.label }}
+                  </span>
+                  <span class="mt-1 text-sm font-medium">+ Crear el primero</span>
+                </a>
+              } @else {
+                <a
+                  [routerLink]="stat.path"
+                  [queryParams]="stat.query"
+                  class="card flex h-full flex-col p-3 transition hover:border-indigo-300 focus-visible:outline-2 focus-visible:outline-indigo-600 dark:hover:border-indigo-700"
+                >
+                  <span
+                    class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"
+                  >
+                    <app-icon [name]="stat.icon" iconClass="size-3.5" /> {{ stat.label }}
+                  </span>
+                  <span class="mt-1 text-2xl font-semibold tabular-nums">{{ stat.value }}</span>
+                </a>
+              }
             </li>
           }
         </ul>
@@ -158,6 +207,48 @@ const FAVORITES_PREVIEW = 5;
         </section>
 
         <div class="space-y-6">
+          <section class="card p-5" aria-labelledby="pending-title">
+            <h2 id="pending-title" class="font-semibold">Pendientes de documentar</h2>
+            @if (graphState().status === 'loading') {
+              <div class="flex justify-center py-6"><app-spinner /></div>
+            } @else if (pending().length === 0) {
+              <p
+                class="mt-3 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"
+              >
+                <app-icon name="check" iconClass="size-4" />
+                {{
+                  hasRelationsData()
+                    ? 'Todo lo visible está relacionado.'
+                    : 'Cuando registres servicios y SP verás aquí lo que falta relacionar.'
+                }}
+              </p>
+            } @else {
+              <ul class="mt-2 space-y-1" data-testid="pending">
+                @for (item of pending(); track item.label) {
+                  <li>
+                    <a
+                      [routerLink]="item.path"
+                      [queryParams]="item.query"
+                      class="-mx-2 flex items-start gap-3 rounded-md px-2 py-2 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-indigo-600 dark:hover:bg-slate-800/50"
+                    >
+                      <span
+                        class="mt-0.5 min-w-7 rounded-md bg-amber-100 px-1.5 text-center text-sm font-semibold text-amber-800 tabular-nums dark:bg-amber-500/15 dark:text-amber-300"
+                        >{{ item.count }}</span
+                      >
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm">{{ item.label }}</span>
+                        <span class="block text-xs text-slate-500 dark:text-slate-400">{{
+                          item.hint
+                        }}</span>
+                      </span>
+                      <app-icon name="chevron-right" iconClass="mt-1 size-4 text-slate-400" />
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
           <section class="card p-5" aria-labelledby="mine-title">
             <h2 id="mine-title" class="font-semibold">Continuar donde lo dejaste</h2>
             @if (summaryState().status === 'loading') {
@@ -315,11 +406,14 @@ export class DashboardPage {
   private readonly auth = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly relations = inject(RelationsService);
   protected readonly layout = inject(LayoutService);
 
   protected readonly typeIcon = RESOURCE_TYPE_ICONS;
   protected readonly typeLabel = RESOURCE_TYPE_LABELS;
   protected readonly paths = RESOURCE_PATHS;
+  protected readonly quickActions = QUICK_ACTIONS;
+  protected readonly greeting = greetingFor(new Date().getHours());
 
   protected readonly summary = createAsyncLoader(
     () => true,
@@ -330,33 +424,109 @@ export class DashboardPage {
     () => this.favoritesService.list(),
   );
 
+  private readonly graph = createAsyncLoader(
+    () => true,
+    () => this.relations.graph(),
+  );
+
   protected readonly summaryState = this.summary.state;
   protected readonly favoritesState = this.favoritesLoader.state;
+  protected readonly graphState = this.graph.state;
 
   protected readonly name = computed(() => {
     const profile = this.auth.profile();
     return profile?.full_name?.split(' ')[0] || profile?.username || '';
   });
 
-  protected readonly modules = computed(() => {
+  protected readonly stats = computed<Stat[]>(() => {
     const counts = this.summary.value()?.counts;
-    const favoritesCount = this.favoritesLoader.value()?.filter((item) => item.resource).length;
-    return visibleSections(this.auth.isAdmin())
-      .flatMap((section) => section.items)
-      .filter((item) => item.path !== APP_PATHS.home)
-      .map((item) => {
-        const type = PATH_TYPE[item.path];
-        if (type) {
-          const count = counts?.[type];
-          return {
-            ...item,
-            count: counts ? (count?.total ?? 0) : null,
-            mine: counts ? (count?.mine ?? 0) : null,
-          };
-        }
-        const isFavorites = item.path === '/favorites';
-        return { ...item, count: isFavorites ? (favoritesCount ?? null) : null, mine: null };
-      });
+    const graph = this.graph.value();
+    const services = graph?.services ?? [];
+    const objects = (graph?.databases ?? []).flatMap((database) => database.objects);
+    const total = (type: 'script' | 'lesson' | 'note' | 'manual' | 'database') =>
+      counts?.[type]?.total ?? 0;
+    const list: Stat[] = [
+      {
+        label: 'Servicios',
+        value: services.filter((service) => service.kind === 'service').length,
+        icon: 'plug',
+        path: '/services',
+        query: { kind: 'service' },
+        createPath: '/services/new',
+      },
+      {
+        label: 'DataPower',
+        value: services.filter((service) => service.kind === 'datapower').length,
+        icon: 'shield',
+        path: '/services',
+        query: { kind: 'datapower' },
+        createPath: '/services/new',
+      },
+      {
+        label: 'Conexiones',
+        value: total('database'),
+        icon: 'database',
+        path: '/databases',
+        createPath: '/databases/new',
+      },
+      {
+        label: 'SP y objetos',
+        value: objects.length + objects.reduce((sum, object) => sum + object.members.length, 0),
+        icon: 'chart',
+        path: '/reports',
+        query: { view: 'objects' },
+      },
+      { label: 'Scripts', value: total('script'), icon: 'code', path: '/scripts', createPath: '/scripts/new' },
+      { label: 'Manuales', value: total('manual'), icon: 'book', path: '/manuals', createPath: '/manuals/new' },
+      { label: 'Lecciones', value: total('lesson'), icon: 'lightbulb', path: '/lessons', createPath: '/lessons/new' },
+      { label: 'Notas', value: total('note'), icon: 'note', path: '/notes', createPath: '/notes/new' },
+    ];
+    return list;
+  });
+
+  /** Lo visible para el usuario que falta relacionar, con enlace al reporte ya filtrado. */
+  protected readonly pending = computed<Pending[]>(() => {
+    const graph = this.graph.value();
+    if (!graph) {
+      return [];
+    }
+    const trace = buildTraceRows(graph);
+    const objects = buildObjectRows(graph);
+    const items: Pending[] = [
+      {
+        count: trace.filter((row) => row.kind === 'DataPower' && !row.route).length,
+        label: 'operaciones de DataPower sin servicio destino',
+        hint: 'Indica a qué servicio enruta cada una.',
+        path: '/reports',
+        query: { kind: 'DataPower', status: 'orphan' },
+      },
+      {
+        count: trace.filter((row) => row.kind !== 'DataPower' && !row.object).length,
+        label: 'operaciones de servicios que no llegan a ninguna BD',
+        hint: 'Relaciona los SP o tablas que usan.',
+        path: '/reports',
+        query: { status: 'no-db' },
+      },
+      {
+        count: objects.filter((row) => row.member && row.usedBy.length === 0).length,
+        label: 'SP / funciones sin uso registrado',
+        hint: 'Ningún servicio indica que los use.',
+        path: '/reports',
+        query: { view: 'objects', usage: 'unused' },
+      },
+      {
+        count: graph.services.filter((service) => service.operations.length === 0).length,
+        label: 'servicios sin operaciones',
+        hint: 'Completa sus operaciones.',
+        path: '/services',
+      },
+    ];
+    return items.filter((item) => item.count > 0);
+  });
+
+  protected readonly hasRelationsData = computed(() => {
+    const graph = this.graph.value();
+    return !!graph && (graph.services.length > 0 || graph.databases.length > 0);
   });
 
   protected readonly lessons = computed(() => this.summary.value()?.lessons ?? null);

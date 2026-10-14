@@ -1,115 +1,60 @@
 import { Injectable, inject } from '@angular/core';
 import ExcelJS from 'exceljs';
 import JSZip from 'jszip';
-import { FlowAnalysis, FlowEvent, FlowFile, FlowLane, FlowStep } from './flows.models';
+import { RelationsService } from '../../core/data/relations.service';
+import { analyzePage, listPages, setVfs } from './engine/flow-analyzer';
+import { buildEventFlows } from './engine/flow-builder';
+import { Vfs } from './engine/vfs';
+import { FlowAnalysis, FlowDiagram, FlowEvent, FlowInventoryRow } from './flows.models';
 
 interface FileHandle {
   readonly kind: 'file';
   readonly name: string;
   getFile(): Promise<File>;
 }
-
 interface DirectoryHandle {
   readonly kind: 'directory';
   readonly name: string;
   values(): AsyncIterable<DirectoryHandle | FileHandle>;
 }
-
 type DirectoryPickerWindow = Window & {
   showDirectoryPicker?: (options?: { id?: string; mode?: 'read' }) => Promise<DirectoryHandle>;
 };
 
-interface MethodEntry {
-  name: string;
-  file: string;
-  body: string;
-  line: number;
-}
-
-const SKIP_DIRS = new Set(['.git', '.vs', 'bin', 'debug', 'node_modules', 'obj', 'packages', 'release', 'testresults']);
+const SKIP_DIRS = new Set(['bin', 'obj', 'packages', 'node_modules', '.git', '.vs', 'testresults', '.svn', 'debug', 'release']);
+/** Solo se leen los archivos que usa el análisis (código, vistas, scripts y configuración). */
+const READ_EXT = /\.(vb|cs|js|aspx|cshtml|vbhtml|config)$/i;
 const MAX_CODE_BYTES = 3 * 1024 * 1024;
-const MAX_FILES = 20_000;
-const MAX_DEPTH = 12;
+const MAX_FILES = 60_000;
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-function xml(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+export type ScanProgress = (files: number) => void;
+
+/** UTF-8 (con o sin BOM); si no es válido (código antiguo) se lee como Windows-1252. */
+export function decodeSource(bytes: Uint8Array): string {
+  const utf8 = new TextDecoder('utf-8').decode(bytes);
+  const text = utf8.includes('\ufffd') ? new TextDecoder('windows-1252').decode(bytes) : utf8;
+  return text.replace(/^\ufeff/, '');
 }
 
-function safeId(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_]/g, '_').replace(/^\d/, '_$&');
-}
-
-function slug(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80) || 'flujo';
-}
-
-export function buildBpmnXml(event: Pick<FlowEvent, 'id' | 'name' | 'trigger' | 'steps'>, page: string): string {
-  const processId = safeId(`process_${page}_${event.id}`);
-  const startId = `${processId}_start`;
-  const endId = `${processId}_end`;
-  const taskIds = event.steps.map((_step, index) => `${processId}_task_${index + 1}`);
-  const flowIds = Array.from({ length: taskIds.length + 1 }, (_item, index) => `${processId}_flow_${index + 1}`);
-  const nodes = [startId, ...taskIds, endId];
-  const laneNames: Record<FlowLane, string> = {
-    front: 'Front',
-    datapower: 'DataPower',
-    servicio: 'Servicio',
-    bd: 'BD',
-  };
-  const laneRefs = new Map<FlowLane, string[]>();
-  for (const lane of Object.keys(laneNames) as FlowLane[]) laneRefs.set(lane, []);
-  laneRefs.get('front')!.push(startId, endId);
-  event.steps.forEach((step, index) => laneRefs.get(step.lane)!.push(taskIds[index]));
-
-  const laneOrder = Object.keys(laneNames) as FlowLane[];
-  const laneY: Record<FlowLane, number> = { front: 0, datapower: 150, servicio: 300, bd: 450 };
-  const positions = nodes.map((id, index) => {
-    const isEvent = id === startId || id === endId;
-    const lane = id === startId || id === endId ? 'front' : event.steps[index - 1].lane;
-    return { id, x: 180 + index * 190, y: laneY[lane] + (isEvent ? 32 : 40), w: isEvent ? 36 : 150, h: isEvent ? 36 : 70 };
-  });
-  const shapes = positions.map(({ id, x, y, w, h }) =>
-    `<bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}"><dc:Bounds x="${x}" y="${y}" width="${w}" height="${h}"/></bpmndi:BPMNShape>`,
-  ).join('');
-  const edges = flowIds.map((id, index) => {
-    const from = positions[index];
-    const to = positions[index + 1];
-    const x1 = from.x + from.w;
-    const y1 = from.y + from.h / 2;
-    const x2 = to.x;
-    const y2 = to.y + to.h / 2;
-    const mid = Math.floor((x1 + x2) / 2);
-    return `<bpmndi:BPMNEdge id="${id}_di" bpmnElement="${id}"><di:waypoint x="${x1}" y="${y1}"/><di:waypoint x="${mid}" y="${y1}"/><di:waypoint x="${mid}" y="${y2}"/><di:waypoint x="${x2}" y="${y2}"/></bpmndi:BPMNEdge>`;
-  }).join('');
-  const laneXml = laneOrder.map((lane) => `<bpmn:lane id="${processId}_lane_${lane}" name="${laneNames[lane]}">${laneRefs.get(lane)!.map((id) => `<bpmn:flowNodeRef>${id}</bpmn:flowNodeRef>`).join('')}</bpmn:lane>`).join('');
-  const laneShapes = laneOrder.map((lane, index) => `<bpmndi:BPMNShape id="${processId}_lane_${lane}_di" bpmnElement="${processId}_lane_${lane}" isHorizontal="true"><dc:Bounds x="100" y="${index * 150}" width="${260 + nodes.length * 190}" height="150"/></bpmndi:BPMNShape>`).join('');
-  const participantShape = `<bpmndi:BPMNShape id="${processId}_participant_di" bpmnElement="${processId}_participant" isHorizontal="true"><dc:Bounds x="80" y="0" width="${280 + nodes.length * 190}" height="600"/></bpmndi:BPMNShape>`;
-  const taskXml = event.steps.map((step, index) => `<bpmn:task id="${taskIds[index]}" name="${xml(step.name)}"><bpmn:documentation>${xml(step.doc)}</bpmn:documentation><bpmn:incoming>${flowIds[index]}</bpmn:incoming><bpmn:outgoing>${flowIds[index + 1]}</bpmn:outgoing></bpmn:task>`).join('');
-  const sequenceXml = flowIds.map((id, index) => `<bpmn:sequenceFlow id="${id}" sourceRef="${nodes[index]}" targetRef="${nodes[index + 1]}"/>`).join('');
-  const laneSet = `<bpmn:laneSet id="${processId}_lanes">${laneXml}</bpmn:laneSet>`;
-  const process = `<bpmn:process id="${processId}" name="${xml(event.name)}" isExecutable="false">${laneSet}<bpmn:startEvent id="${startId}" name="${xml(event.trigger)}"><bpmn:outgoing>${flowIds[0]}</bpmn:outgoing></bpmn:startEvent>${taskXml}<bpmn:endEvent id="${endId}" name="Fin"><bpmn:incoming>${flowIds.at(-1)}</bpmn:incoming></bpmn:endEvent>${sequenceXml}</bpmn:process>`;
-  const participants = `<bpmn:collaboration id="${processId}_collaboration"><bpmn:participant id="${processId}_participant" name="${xml(page)}" processRef="${processId}"/></bpmn:collaboration>`;
-  return `<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="${processId}_definitions" targetNamespace="https://devhub-tecnico.local/bpmn">${process}${participants}<bpmndi:BPMNDiagram id="${processId}_diagram"><bpmndi:BPMNPlane id="${processId}_plane" bpmnElement="${processId}_collaboration">${participantShape}${laneShapes}${shapes}${edges}</bpmndi:BPMNPlane></bpmndi:BPMNDiagram></bpmn:definitions>`;
-}
-
+/**
+ * Flujos BPMN desde el código. Todo ocurre en el navegador: la carpeta elegida se lee en
+ * memoria y no se sube; solo se consulta el grafo de relaciones visible para el usuario.
+ */
 @Injectable({ providedIn: 'root' })
 export class FlowsService {
-  private files = new Map<string, File>();
+  private readonly relations = inject(RelationsService);
   private repoName = '';
 
-  get pages(): string[] {
-    return [...this.files.keys()].filter((path) => /\.(aspx|cshtml|vbhtml)$/i.test(path)).sort();
+  get supportsDirectoryPicker(): boolean {
+    return typeof (window as DirectoryPickerWindow).showDirectoryPicker === 'function';
   }
 
   get repositoryName(): string {
     return this.repoName;
   }
 
-  get supportsDirectoryPicker(): boolean {
-    return typeof (window as DirectoryPickerWindow).showDirectoryPicker === 'function';
-  }
-
-  async pickDirectory(): Promise<string | null> {
+  async pickDirectory(onProgress?: ScanProgress): Promise<string | null> {
     const picker = (window as DirectoryPickerWindow).showDirectoryPicker;
     if (!picker) return null;
     let handle: DirectoryHandle;
@@ -119,196 +64,108 @@ export class FlowsService {
       if (error instanceof DOMException && error.name === 'AbortError') return null;
       throw error;
     }
-    const files = new Map<string, File>();
-    await this.walk(handle, '', files, 0);
-    this.files = files;
-    this.repoName = handle.name;
-    return this.repoName;
+    const files: { path: string; file: File }[] = [];
+    await this.walk(handle, '', files);
+    return this.load(handle.name, files, onProgress);
   }
 
-  async fromFileList(list: FileList): Promise<string | null> {
-    const files = Array.from(list);
-    if (!files.length) return null;
-    this.files = new Map<string, File>();
-    for (const file of files) {
-      const path = file.webkitRelativePath.split('/').slice(1).join('/') || file.name;
-      if (!this.excluded(path)) this.files.set(path, file);
-    }
-    this.repoName = files[0].webkitRelativePath.split('/')[0] || 'repositorio';
-    return this.repoName;
+  async fromFileList(list: FileList, onProgress?: ScanProgress): Promise<string | null> {
+    const all = Array.from(list);
+    if (!all.length) return null;
+    const files = all
+      .map((file) => ({ path: file.webkitRelativePath.split('/').slice(1).join('/') || file.name, file }))
+      .filter(({ path }) => !path.split('/').some((part) => SKIP_DIRS.has(part.toLowerCase())));
+    return this.load(all[0].webkitRelativePath.split('/')[0] || 'repositorio', files, onProgress);
   }
 
-  async analyze(page: string): Promise<FlowAnalysis> {
-    const started = performance.now();
-    const source = this.files.get(page);
-    if (!source) throw new Error('La página no existe en la carpeta seleccionada.');
-    const pageText = await this.read(source);
-    const mvc = /\.(cshtml|vbhtml)$/i.test(page);
-    const codePath = this.sidecar(page);
-    const codeText = codePath ? await this.read(this.files.get(codePath)!) : '';
-    const allCode = await Promise.all([...this.files.entries()]
-      .filter(([path, file]) => /\.(cs|vb)$/i.test(path) && file.size <= MAX_CODE_BYTES)
-      .map(async ([path, file]) => [path, await this.read(file)] as const));
-    const methods = allCode.flatMap(([path, text]) => this.methods(path, text));
-    const warnings: string[] = [];
-    const events = mvc
-      ? this.mvcEvents(page, pageText, methods, warnings)
-      : this.webFormsEvents(page, pageText, codeText, methods, warnings);
-    const resolved = events.map((event, index) => {
-      const entry = methods.find((method) => method.name.toLowerCase() === event.method.toLowerCase());
-      const steps = this.trace(entry, methods);
-      const result: FlowEvent = {
-        id: `E${index + 1}`,
-        name: event.method,
-        trigger: event.trigger,
-        entry: entry ? `${entry.file}:${entry.line}` : page,
-        steps,
-        xml: '',
-        fileName: `${slug(this.repoName)}-${slug(event.method)}.bpmn`,
-      };
-      result.xml = buildBpmnXml(result, page);
-      return result;
-    });
-    if (!resolved.length) warnings.push('No se encontraron eventos o acciones vinculados a esta página.');
-    return {
-      page,
-      kind: mvc ? 'mvc' : 'webforms',
-      events: resolved,
-      warnings,
-      stats: { files: this.files.size, methods: methods.length, ms: Math.round(performance.now() - started) },
-    };
+  listPages(): string[] {
+    return listPages('');
   }
 
-  async exportEvent(event: FlowEvent): Promise<void> {
-    this.download(event.fileName, event.xml, 'application/xml;charset=utf-8');
+  analyze(page: string): FlowAnalysis {
+    if (!/\.(aspx|cshtml|vbhtml)$/i.test(page)) throw new Error('Elige una página .aspx o .cshtml.');
+    return analyzePage('', page) as FlowAnalysis;
   }
 
-  async exportAll(analysis: FlowAnalysis): Promise<void> {
+  /** Diagramas (principal y subprocesos) de un evento, completados con lo registrado en DevHub. */
+  async build(title: string, event: FlowEvent): Promise<FlowDiagram[]> {
+    if (!event.groups.length) throw new Error('No hay pasos para generar el diagrama.');
+    const graph = await this.relations.graph();
+    return buildEventFlows({ title: title.slice(0, 120), event, graph }) as FlowDiagram[];
+  }
+
+  async downloadZip(title: string, event: FlowEvent): Promise<string> {
+    const diagrams = await this.build(title, event);
     const zip = new JSZip();
-    for (const event of analysis.events) zip.file(event.fileName, event.xml);
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet('Insumos');
-    sheet.columns = [
-      { header: 'Evento', key: 'event', width: 28 },
-      { header: 'Carril', key: 'lane', width: 16 },
-      { header: 'Paso', key: 'name', width: 48 },
-      { header: 'Origen', key: 'doc', width: 80 },
-    ];
-    analysis.events.forEach((event) => event.steps.forEach((step) => sheet.addRow({ event: event.trigger, lane: step.lane, name: step.name, doc: step.doc })));
-    sheet.getRow(1).font = { bold: true };
-    zip.file('insumos.xlsx', await workbook.xlsx.writeBuffer());
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    this.download(`${slug(analysis.page)}-bpmn.zip`, url, 'application/zip', true);
+    for (const diagram of diagrams) zip.file(diagram.fileName, diagram.xml);
+    const fileName = diagrams[0].fileName.replace(/\.bpmn$/, '.zip');
+    this.save(fileName, await zip.generateAsync({ type: 'blob' }));
+    return fileName;
   }
 
-  private async walk(directory: DirectoryHandle, prefix: string, files: Map<string, File>, depth: number): Promise<void> {
-    if (depth > MAX_DEPTH || files.size >= MAX_FILES) return;
+  downloadDiagram(diagram: FlowDiagram): void {
+    this.save(diagram.fileName, new Blob([diagram.xml], { type: 'application/xml' }));
+  }
+
+  /** Cuadro de insumos de la página en Excel. */
+  async downloadInventory(analysis: FlowAnalysis): Promise<string> {
+    const inventory = analysis.inventory;
+    const mark = (row: { method: string; reachable: boolean }) => (row.reachable ? row.method : `${row.method} ⚠`);
+    const workbook = new ExcelJS.Workbook();
+    const sheet = (name: string, columns: [string, number][], rows: (string | number)[][]) => {
+      const worksheet = workbook.addWorksheet(name);
+      worksheet.columns = columns.map(([header, width]) => ({ header, width }));
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+      worksheet.getRow(1).font = { bold: true };
+      rows.forEach((cells, index) => worksheet.addRow([index + 1, ...cells]));
+    };
+    const rowTail = (row: FlowInventoryRow) => [row.key ?? '', row.url ?? '', row.kind];
+    sheet('Stored procedures', [['#', 5], ['Método en la página', 32], ['Operación WCF', 42], ['Paquete.SP', 55], ['Conexión', 14], ['Origen en el código', 60]],
+      inventory.sp.map((row) => [mark(row), row.wcf ?? '', row.name, row.connection ?? '', row.doc]));
+    sheet('DataPower', [['#', 5], ['Método en la página', 32], ['Operación WCF', 42], ['Clase backend', 28], ['Llave de URL', 30], ['URL', 60], ['Tipo', 8]],
+      inventory.datapower.map((row) => [mark(row), row.wcf ?? '', row.backendClass ?? '', ...rowTail(row)]));
+    sheet('Servicios', [['#', 5], ['Método en la página', 32], ['Operación WCF', 42], ['Servicio / método final', 50], ['Llave de URL', 30], ['URL', 60], ['Tipo', 8]],
+      inventory.services.map((row) => [mark(row), row.wcf ?? '', row.name, ...rowTail(row)]));
+    sheet('Sin insumos', [['#', 5], ['Método en la página', 40], ['Origen en el código', 60]],
+      inventory.empty.map((row) => [mark(row), row.doc]));
+    const base = (analysis.page.split('/').pop() ?? 'pagina').replace(/\.\w+$/, '');
+    const fileName = `insumos_${base}.xlsx`;
+    const buffer = await workbook.xlsx.writeBuffer();
+    this.save(fileName, new Blob([buffer], { type: XLSX_MIME }));
+    return fileName;
+  }
+
+  private async load(name: string, files: { path: string; file: File }[], onProgress?: ScanProgress): Promise<string> {
+    const vfs = new Vfs();
+    const candidates = files.filter(({ path, file }) => READ_EXT.test(path) && !/\.dll\.config$/i.test(path) && file.size <= MAX_CODE_BYTES);
+    let done = 0;
+    for (let start = 0; start < candidates.length; start += 40) {
+      await Promise.all(
+        candidates.slice(start, start + 40).map(async ({ path, file }) => {
+          vfs.add(path, decodeSource(new Uint8Array(await file.arrayBuffer())), file.size);
+          onProgress?.(++done);
+        }),
+      );
+    }
+    setVfs(vfs);
+    this.repoName = name;
+    return name;
+  }
+
+  private async walk(directory: DirectoryHandle, prefix: string, files: { path: string; file: File }[]): Promise<void> {
     for await (const entry of directory.values()) {
-      if (files.size >= MAX_FILES) break;
+      if (files.length >= MAX_FILES) return;
       const path = prefix ? `${prefix}/${entry.name}` : entry.name;
       if (entry.kind === 'directory') {
-        if (!SKIP_DIRS.has(entry.name.toLowerCase())) await this.walk(entry, path, files, depth + 1);
-      } else {
-        const file = await entry.getFile();
-        if (!this.excluded(path)) files.set(path, file);
+        if (!SKIP_DIRS.has(entry.name.toLowerCase())) await this.walk(entry, path, files);
+      } else if (READ_EXT.test(entry.name)) {
+        files.push({ path, file: await entry.getFile() });
       }
     }
   }
 
-  private excluded(path: string): boolean {
-    return path.split('/').some((segment) => SKIP_DIRS.has(segment.toLowerCase()));
-  }
-
-  private sidecar(page: string): string | null {
-    const candidates = page.endsWith('.aspx')
-      ? [`${page}.cs`, `${page}.vb`, page.replace(/\.aspx$/i, '.aspx.cs'), page.replace(/\.aspx$/i, '.aspx.vb')]
-      : [`${page}.cs`, `${page}.vb`];
-    return candidates.find((candidate) => this.files.has(candidate)) ?? null;
-  }
-
-  private async read(file: File): Promise<string> {
-    if (file.size > MAX_CODE_BYTES) return '';
-    return file.text();
-  }
-
-  private methods(path: string, content: string): MethodEntry[] {
-    const found: MethodEntry[] = [];
-    const regex = /(?:public|private|protected|internal|static|async|override|virtual|\s)+[\w<>\[\],.?]+\s+(\w+)\s*\([^;{}]*\)\s*(?:\{|\n)/g;
-    for (const match of content.matchAll(regex)) {
-      const start = (match.index ?? 0) + match[0].length;
-      const open = content.indexOf('{', start - 1);
-      if (open < 0) continue;
-      let depth = 0;
-      let end = open;
-      for (; end < content.length; end++) {
-        if (content[end] === '{') depth++;
-        if (content[end] === '}' && --depth === 0) break;
-      }
-      const body = content.slice(open + 1, end);
-      found.push({ name: match[1], file: path, body, line: content.slice(0, match.index).split('\n').length });
-    }
-    const vb = /(?:Sub|Function)\s+(\w+)\s*\([^\n]*\)[^\n]*\n([\s\S]*?)\n\s*End\s+(?:Sub|Function)/gi;
-    for (const match of content.matchAll(vb)) {
-      found.push({ name: match[1], file: path, body: match[2], line: content.slice(0, match.index).split('\n').length });
-    }
-    return found;
-  }
-
-  private webFormsEvents(page: string, markup: string, code: string, methods: MethodEntry[], warnings: string[]): { method: string; trigger: string }[] {
-    const handlers = new Map<string, string>();
-    for (const match of markup.matchAll(/\b(On\w+)\s*=\s*["']([A-Za-z_]\w*)["']/gi)) handlers.set(match[2], match[1]);
-    const pageLoad = methods.find((method) => method.name.toLowerCase() === 'page_load');
-    if (pageLoad) handlers.set(pageLoad.name, 'Page_Load');
-    const handlersClause = /Handles\s+[\w.,\s]+\.(Click|Command|SelectedIndexChanged|TextChanged)/gi;
-    for (const match of code.matchAll(handlersClause)) {
-      const prior = code.slice(0, match.index).match(/(?:Sub|Function)\s+(\w+)\s*\([^)]*\)\s*$/i);
-      if (prior) handlers.set(prior[1], match[1]);
-    }
-    if (!handlers.size) warnings.push(`No se identificaron manejadores de eventos en ${page}.`);
-    return [...handlers].map(([method, trigger]) => ({ method, trigger }));
-  }
-
-  private mvcEvents(page: string, markup: string, methods: MethodEntry[], warnings: string[]): { method: string; trigger: string }[] {
-    const actions = new Set<string>();
-    for (const match of markup.matchAll(/(?:asp-action|action)\s*=\s*["']([\w-]+)["']/gi)) actions.add(match[1]);
-    for (const match of markup.matchAll(/(?:url|action)\s*:\s*["'][^"']*\/([\w-]+)(?:\?|["'])/gi)) actions.add(match[1]);
-    const events = [...actions].map((action) => ({
-      method: methods.find((method) => method.name.toLowerCase() === action.toLowerCase())?.name ?? action,
-      trigger: `Acción ${action}`,
-    }));
-    if (!events.length) warnings.push(`No se identificaron acciones del controlador en ${page}.`);
-    return events;
-  }
-
-  private trace(entry: MethodEntry | undefined, methods: MethodEntry[]): FlowStep[] {
-    if (!entry) return [];
-    const steps: FlowStep[] = [];
-    const seen = new Set<string>();
-    const byName = new Map(methods.map((method) => [method.name.toLowerCase(), method]));
-    const visit = (method: MethodEntry, depth: number) => {
-      if (depth > 5 || seen.has(`${method.file}:${method.name}`) || steps.length >= 25) return;
-      seen.add(`${method.file}:${method.name}`);
-      const body = method.body;
-      const sql = body.match(/(?:CommandText\s*=|StoredProcedure\s*,?\s*["'])([^"'\n;]+)/i);
-      if (sql) steps.push({ lane: 'bd', name: sql[1].trim(), doc: `${method.file}:${method.line}` });
-      for (const match of body.matchAll(/(?:RestServiceDP|DataPower)[\w.]*\s*\([^)]*["']([^"']+)["']/gi)) {
-        steps.push({ lane: 'datapower', name: match[1], doc: `${method.file}:${method.line}` });
-      }
-      for (const match of body.matchAll(/https?:\/\/[^"'\s)]+/g)) {
-        steps.push({ lane: 'servicio', name: match[0], doc: `${method.file}:${method.line}` });
-      }
-      for (const match of body.matchAll(/\b([A-Za-z_]\w*)\s*\(/g)) {
-        const next = byName.get(match[1].toLowerCase());
-        if (next && next.name !== method.name) visit(next, depth + 1);
-      }
-    };
-    visit(entry, 0);
-    return steps;
-  }
-
-  private download(fileName: string, value: string | Blob, mime: string, valueIsUrl = false): void {
-    const url = valueIsUrl ? String(value) : URL.createObjectURL(new Blob([value], { type: mime }));
+  private save(fileName: string, blob: Blob): void {
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
@@ -316,6 +173,6 @@ export class FlowsService {
     document.body.append(link);
     link.click();
     link.remove();
-    if (!valueIsUrl) setTimeout(() => URL.revokeObjectURL(url), 0);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 }
