@@ -72,6 +72,32 @@ export const routes: Routes = [
           import('./features/services/services.routes').then((m) => m.SERVICES_ROUTES),
       },
       {
+        path: 'databases',
+        loadChildren: () =>
+          import('./features/databases/databases.routes').then((m) => m.DATABASES_ROUTES),
+      },
+      {
+        path: 'reports',
+        title: 'Reportes',
+        loadComponent: () => import('./features/reports/reports.page').then((m) => m.ReportsPage),
+      },
+      {
+        path: 'bulk-import',
+        title: 'Carga masiva',
+        loadComponent: () =>
+          import('./features/bulk-import/bulk-import.page').then((m) => m.BulkImportPage),
+      },
+      {
+        path: 'flows',
+        title: 'Flujos BPMN',
+        loadComponent: () => import('./features/flows/flows.page').then((m) => m.FlowsPage),
+      },
+      {
+        path: 'mdi',
+        title: 'Generar MDI',
+        loadComponent: () => import('./features/mdi/mdi.page').then((m) => m.MdiPage),
+      },
+      {
         path: 'tools',
         loadChildren: () => import('./features/tools/tools.routes').then((m) => m.TOOLS_ROUTES),
       },

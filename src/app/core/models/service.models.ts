@@ -9,6 +9,13 @@ export const SERVICE_PROTOCOLS = [
 ] as const;
 export type ServiceProtocol = (typeof SERVICE_PROTOCOLS)[number]['value'];
 
+/** Tipo de componente (obligatorio): servicio REST/SOAP de backend o DataPower. */
+export const SERVICE_KINDS = [
+  { value: 'service', label: 'Servicio' },
+  { value: 'datapower', label: 'DataPower' },
+] as const;
+export type ServiceKind = (typeof SERVICE_KINDS)[number]['value'];
+
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
 export type HttpMethod = (typeof HTTP_METHODS)[number];
 
@@ -74,10 +81,67 @@ export interface ServiceOperation {
   response_body?: string | null;
   response_status?: number | null;
   notes?: string | null;
+  /**
+   * Servicios a los que llama: un DataPower enruta a uno solo; un REST/SOAP puede llamar
+   * a varios.
+   */
+  targets?: ServiceOperationTarget[];
+  /** Objetos de base de datos que usa (package, SP, tabla…). */
+  db_refs?: ServiceDbRef[];
+}
+
+/** Objeto de BD que usa una operación: conexión + objeto (ESQUEMA.NOMBRE) + SP del package. */
+export interface ServiceDbRef {
+  database_id: string;
+  object: string;
+  member?: string | null;
+}
+
+export interface ServiceOperationTarget {
+  service_id: string;
+  /** Operación concreta del servicio destino (opcional). */
+  operation?: string | null;
+}
+
+/** Servicio en el selector de destino (RPC services_catalog). */
+export interface ServiceCatalogItem {
+  id: string;
+  title: string;
+  kind: ServiceKind;
+  protocol: ServiceProtocol;
+  system: string | null;
+  base_url: string;
+  datapower_domain: string | null;
+  operations: string[];
+}
+
+/** Relaciones de un servicio (RPC service_links). */
+export interface ServiceLinks {
+  /** Servicios destino de sus operaciones por id; null si el servicio ya no existe. */
+  targets: Record<
+    string,
+    { id: string; title: string; protocol: ServiceProtocol; base_url: string } | null
+  >;
+  /** Operaciones de otros servicios (p. ej. un DataPower) que llaman a este. */
+  exposedBy: {
+    id: string;
+    title: string;
+    kind: ServiceKind;
+    protocol: ServiceProtocol;
+    datapower_domain: string | null;
+    operation: string;
+    target_operation: string | null;
+  }[];
+  /** Conexiones de los objetos de BD que usan sus operaciones; null si se borró. */
+  databases: Record<
+    string,
+    { id: string; title: string; engine: string; environment: string } | null
+  >;
 }
 
 /** Versión de listado: sin credenciales ni operaciones completas. */
 export interface ServiceSummary extends BaseResource {
+  kind: ServiceKind;
   system: string | null;
   protocol: ServiceProtocol;
   base_url: string;
@@ -99,6 +163,7 @@ export interface Service extends ServiceSummary {
 }
 
 export interface ServiceInput extends BaseResourceInput {
+  kind: ServiceKind;
   system?: string | null;
   protocol: ServiceProtocol;
   base_url: string;
@@ -121,6 +186,7 @@ export interface ServiceRecordInput extends ServiceInput {
 }
 
 export interface ServiceFilters {
+  kind?: ServiceKind;
   protocol?: ServiceProtocol;
   system?: string;
 }

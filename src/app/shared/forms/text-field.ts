@@ -39,6 +39,7 @@ import { controlErrorMessage, ErrorMessages, trackControlErrors } from './form-e
           [type]="inputType()"
           [formControl]="control()"
           [attr.autocomplete]="autocomplete()"
+          [attr.inputmode]="inputmode() ?? null"
           [attr.placeholder]="placeholder() || null"
           [attr.maxlength]="maxlength() ?? null"
           [attr.aria-invalid]="errorMessage() ? 'true' : null"
@@ -79,6 +80,8 @@ export class TextField {
   readonly hint = input('');
   readonly optional = input(false);
   readonly maxlength = input<number>();
+  /** Teclado sugerido (p. ej. `numeric` para un PIN). */
+  readonly inputmode = input<string>();
   readonly rows = input(3);
   readonly messages = input<ErrorMessages>({});
 

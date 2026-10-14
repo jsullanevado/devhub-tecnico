@@ -290,6 +290,7 @@ export type Database = {
           owner_id: string;
           title: string;
           description: string | null;
+          kind: string;
           system: string | null;
           protocol: string;
           base_url: string;
@@ -316,6 +317,7 @@ export type Database = {
           owner_id?: string;
           title: string;
           description?: string | null;
+          kind?: string;
           system?: string | null;
           protocol?: string;
           base_url: string;
@@ -342,6 +344,7 @@ export type Database = {
           owner_id?: string;
           title?: string;
           description?: string | null;
+          kind?: string;
           system?: string | null;
           protocol?: string;
           base_url?: string;
@@ -382,6 +385,7 @@ export type Database = {
           note_id: string | null;
           manual_id: string | null;
           service_id: string | null;
+          database_id: string | null;
           resource_type: string | null;
           created_at: string;
         };
@@ -393,6 +397,7 @@ export type Database = {
           note_id?: string | null;
           manual_id?: string | null;
           service_id?: string | null;
+          database_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -403,6 +408,7 @@ export type Database = {
           note_id?: string | null;
           manual_id?: string | null;
           service_id?: string | null;
+          database_id?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -448,7 +454,172 @@ export type Database = {
             referencedRelation: 'services';
             referencedColumns: ['id'];
           },
+          {
+            foreignKeyName: 'user_favorites_database_id_fkey';
+            columns: ['database_id'];
+            isOneToOne: false;
+            referencedRelation: 'databases';
+            referencedColumns: ['id'];
+          },
         ];
+      };
+      databases: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string | null;
+          engine: string;
+          environment: string;
+          host: string | null;
+          port: number | null;
+          service_name: string | null;
+          connection_string: string | null;
+          username: string | null;
+          password: string | null;
+          notes: string | null;
+          objects: Json;
+          tags: string[];
+          visibility: string;
+          search_vector: unknown | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id?: string;
+          title: string;
+          description?: string | null;
+          engine?: string;
+          environment?: string;
+          host?: string | null;
+          port?: number | null;
+          service_name?: string | null;
+          connection_string?: string | null;
+          username?: string | null;
+          password?: string | null;
+          notes?: string | null;
+          objects?: Json;
+          tags?: string[];
+          visibility?: string;
+          search_vector?: unknown | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string | null;
+          engine?: string;
+          environment?: string;
+          host?: string | null;
+          port?: number | null;
+          service_name?: string | null;
+          connection_string?: string | null;
+          username?: string | null;
+          password?: string | null;
+          notes?: string | null;
+          objects?: Json;
+          tags?: string[];
+          visibility?: string;
+          search_vector?: unknown | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'databases_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mdi_configs: {
+        Row: {
+          user_id: string;
+          app: string;
+          config: Json;
+          updated_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          app: string;
+          config?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          app?: string;
+          config?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mdi_templates: {
+        Row: {
+          user_id: string;
+          app: string;
+          file_path: string;
+          file_name: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          app: string;
+          file_path: string;
+          file_name: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          app?: string;
+          file_path?: string;
+          file_name?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      mdi_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          app: string;
+          layer: string;
+          source_branch: string;
+          target_branch: string;
+          proyecto: string;
+          file_name: string;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          app: string;
+          layer: string;
+          source_branch: string;
+          target_branch: string;
+          proyecto: string;
+          file_name: string;
+          payload: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          app?: string;
+          layer?: string;
+          source_branch?: string;
+          target_branch?: string;
+          proyecto?: string;
+          file_name?: string;
+          payload?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {
@@ -480,6 +651,30 @@ export type Database = {
       };
       dashboard_summary: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      services_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      service_links: {
+        Args: { p_service_id: string };
+        Returns: Json;
+      };
+      databases_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      database_used_by: {
+        Args: { p_database_id: string };
+        Returns: Json;
+      };
+      relations_graph: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      bulk_import_apply: {
+        Args: { p_databases: Json; p_services: Json };
         Returns: Json;
       };
     };

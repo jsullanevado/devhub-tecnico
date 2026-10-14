@@ -8,4 +8,5 @@ export const RESOURCE_TYPE_ICONS: Record<ResourceType, IconName> = {
   note: 'note',
   manual: 'book',
   service: 'plug',
+  database: 'database',
 };

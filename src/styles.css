@@ -20,6 +20,11 @@
 
 /* Componentes visuales reutilizables (botones, campos, tarjetas). */
 @layer components {
+  /* Barra de Guardar/Cancelar fija abajo en los formularios largos. */
+  .form-actions {
+    @apply sticky bottom-0 z-10 -mx-4 flex flex-col-reverse gap-2 border-t border-slate-200 bg-slate-50/90 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:justify-end sm:rounded-t-xl sm:border-x dark:border-slate-800 dark:bg-slate-950/90;
+  }
+
   .card {
     @apply rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
   }

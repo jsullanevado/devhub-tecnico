@@ -1,5 +1,12 @@
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
-import { HttpMethod, KeyValue, SERVICE_LIMITS, ServiceOperation } from '../../core/models';
+import {
+  HttpMethod,
+  KeyValue,
+  SERVICE_LIMITS,
+  ServiceDbRef,
+  ServiceOperation,
+  ServiceOperationTarget,
+} from '../../core/models';
 import { notBlank } from '../../shared/forms/validators';
 
 export type PairGroup = FormGroup<{
@@ -19,7 +26,49 @@ export type OperationGroup = FormGroup<{
   response_status: FormControl<number | null>;
   response_body: FormControl<string>;
   notes: FormControl<string>;
+  /** Servicios a los que llama (DataPower: uno como máximo). */
+  targets: FormArray<TargetGroup>;
+  /** Objetos de BD que usa (conexión + objeto + SP del package). */
+  db_refs: FormArray<DbRefGroup>;
 }>;
+
+export type DbRefGroup = FormGroup<{
+  database_id: FormControl<string>;
+  object: FormControl<string>;
+  member: FormControl<string>;
+}>;
+
+export const DB_REFS_MAX = 20;
+export const TARGETS_MAX = 20;
+
+export type TargetGroup = FormGroup<{
+  service_id: FormControl<string>;
+  operation: FormControl<string>;
+}>;
+
+export function createTargetGroup(target: Partial<ServiceOperationTarget> = {}): TargetGroup {
+  return new FormGroup({
+    service_id: new FormControl(target.service_id ?? '', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    operation: text(target.operation ?? '', SERVICE_LIMITS.operationNameMax),
+  });
+}
+
+export function createDbRefGroup(ref: Partial<ServiceDbRef> = {}): DbRefGroup {
+  return new FormGroup({
+    database_id: new FormControl(ref.database_id ?? '', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    object: new FormControl(ref.object ?? '', {
+      nonNullable: true,
+      validators: [Validators.required, notBlank, Validators.maxLength(257)],
+    }),
+    member: text(ref.member ?? '', 128),
+  });
+}
 
 const text = (value: string, max: number) =>
   new FormControl(value, { nonNullable: true, validators: [Validators.maxLength(max)] });
@@ -61,6 +110,16 @@ export function createOperationGroup(operation: Partial<ServiceOperation> = {}):
     }),
     response_body: text(operation.response_body ?? '', SERVICE_LIMITS.bodyMax),
     notes: text(operation.notes ?? '', SERVICE_LIMITS.operationNotesMax),
+    targets: new FormArray(
+      (operation.targets ?? []).map((target) => createTargetGroup(target)),
+      { validators: [Validators.maxLength(TARGETS_MAX)] },
+    ),
+    db_refs: new FormArray(
+      (operation.db_refs ?? []).map((ref) => createDbRefGroup(ref)),
+      {
+        validators: [Validators.maxLength(DB_REFS_MAX)],
+      },
+    ),
   });
 }
 
@@ -88,5 +147,15 @@ export function toOperation(group: OperationGroup): ServiceOperation {
     response_status: typeof status === 'number' && Number.isFinite(status) ? status : null,
     response_body: value.response_body.trim() ? value.response_body : null,
     notes: orNull(value.notes),
+    targets: value.targets
+      .filter((target) => target.service_id)
+      .map((target) => ({ service_id: target.service_id, operation: orNull(target.operation) })),
+    db_refs: value.db_refs
+      .filter((ref) => ref.database_id && ref.object.trim())
+      .map((ref) => ({
+        database_id: ref.database_id,
+        object: ref.object.trim(),
+        member: orNull(ref.member),
+      })),
   };
 }

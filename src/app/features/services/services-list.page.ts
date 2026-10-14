@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink } from '@angular/router';
 import { ServicesService } from '../../core/data/services.service';
 import {
+  SERVICE_KINDS,
   SERVICE_PROTOCOLS,
   ServiceFilters,
   ServiceSummary,
@@ -15,7 +16,11 @@ import { ResourceListStore } from '../../shared/resources/resource-list.store';
 import { Icon } from '../../shared/ui/icon/icon';
 import { PageHeader } from '../../shared/ui/page-header/page-header';
 import { SearchBox } from '../../shared/ui/search-box/search-box';
-import { SERVICE_FILTER_CODEC, SERVICE_PROTOCOL_VALUES } from './services.codec';
+import {
+  SERVICE_FILTER_CODEC,
+  SERVICE_KIND_VALUES,
+  SERVICE_PROTOCOL_VALUES,
+} from './services.codec';
 
 const PAGE_SIZE = 12;
 
@@ -36,6 +41,7 @@ const PAGE_SIZE = 12;
       </app-page-header>
 
       <app-list-toolbar
+        viewKey="services"
         subject="servicios"
         [search]="query.search"
         [tags]="query.tags"
@@ -48,6 +54,14 @@ const PAGE_SIZE = 12;
         (sortChange)="list.update({ sort: $event })"
         (clear)="list.clearFilters()"
       >
+        <select class="input w-auto" aria-label="Componente" (change)="onKind($event)">
+          <option value="">Servicios y DataPower</option>
+          @for (option of kinds; track option.value) {
+            <option [value]="option.value" [selected]="option.value === query.filters.kind">
+              Solo {{ option.label }}
+            </option>
+          }
+        </select>
         <select class="input w-auto" aria-label="Protocolo" (change)="onProtocol($event)">
           <option value="">REST y SOAP</option>
           @for (option of protocols; track option.value) {
@@ -66,6 +80,7 @@ const PAGE_SIZE = 12;
       </app-list-toolbar>
 
       <app-list-view
+        viewKey="services"
         [loading]="list.loading()"
         [error]="list.error()"
         [total]="list.page()?.total ?? null"
@@ -79,7 +94,9 @@ const PAGE_SIZE = 12;
         (pageChange)="list.update({ page: $event })"
       >
         <a empty-action routerLink="new" class="btn btn-primary">Nuevo servicio</a>
-        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 group-data-[layout=list]/list:grid-cols-1 group-data-[layout=list]/list:gap-2"
+        >
           @for (service of items(); track service.id) {
             <li>
               <app-resource-card
@@ -99,7 +116,7 @@ const PAGE_SIZE = 12;
                 @if (service.system) {
                   <span class="badge">{{ service.system }}</span>
                 }
-                @if (service.datapower_domain) {
+                @if (service.kind === 'datapower') {
                   <span class="badge">DataPower</span>
                 }
                 <span class="w-full truncate font-mono text-xs text-slate-500 dark:text-slate-400">
@@ -122,7 +139,13 @@ export class ServicesListPage {
   protected readonly items = computed(() => this.list.page()?.items ?? []);
   protected readonly pageSize = PAGE_SIZE;
   protected readonly protocols = SERVICE_PROTOCOLS;
+  protected readonly kinds = SERVICE_KINDS;
   protected readonly protocolLabel = serviceProtocolLabel;
+
+  protected onKind(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.list.update({ filters: { kind: oneOf(value, SERVICE_KIND_VALUES) } });
+  }
 
   protected onProtocol(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;

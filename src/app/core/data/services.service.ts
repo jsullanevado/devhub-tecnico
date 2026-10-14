@@ -3,9 +3,12 @@ import { environment } from '../../../environments/environment';
 import { matchesFileSignature } from '../../shared/utils/file-signature';
 import { AppError } from '../errors/app-error';
 import { toAppError } from '../errors/error-mapper';
+import { openDownloadUrl } from '../../shared/utils/file-utils';
 import {
   Service,
+  ServiceCatalogItem,
   ServiceFilters,
+  ServiceLinks,
   ServiceRecordInput,
   ServiceSummary,
   validateSoapUiFile,
@@ -14,7 +17,7 @@ import { AUTHOR_EMBED, escapeLike } from './query-utils';
 import { FilterCondition, ResourceRepository } from './resource-repository';
 
 const SUMMARY_COLUMNS =
-  'id, owner_id, title, description, system, protocol, base_url, datapower_domain, tags, visibility, created_at, updated_at';
+  'id, owner_id, title, description, kind, system, protocol, base_url, datapower_domain, tags, visibility, created_at, updated_at';
 const DETAIL_COLUMNS = `${SUMMARY_COLUMNS}, wsdl_url, datapower_object, auth_type, auth_username, auth_secret, auth_notes, notes, operations, soapui_file_path, soapui_file_name, soapui_file_size`;
 
 /** Cambio del proyecto SoapUI al guardar: conservar, sustituir por un archivo o quitar. */
@@ -39,6 +42,9 @@ export class ServicesService extends ResourceRepository<
 
   protected toConditions(filters: ServiceFilters): FilterCondition[] {
     const conditions: FilterCondition[] = [];
+    if (filters.kind) {
+      conditions.push({ column: 'kind', operator: 'eq', value: filters.kind });
+    }
     if (filters.protocol) {
       conditions.push({ column: 'protocol', operator: 'eq', value: filters.protocol });
     }
@@ -48,6 +54,24 @@ export class ServicesService extends ResourceRepository<
       conditions.push({ column: 'system', operator: 'ilike', value: escapeLike(system) });
     }
     return conditions;
+  }
+
+  /** Todos los servicios visibles, para elegir el destino de una operación. */
+  async catalog(): Promise<ServiceCatalogItem[]> {
+    const { data, error } = await this.supabase.rpc('services_catalog');
+    if (error) {
+      throw toAppError(error);
+    }
+    return (data ?? []) as unknown as ServiceCatalogItem[];
+  }
+
+  /** A qué servicios llama este y qué operaciones de otros servicios lo llaman a él. */
+  async links(id: string): Promise<ServiceLinks> {
+    const { data, error } = await this.supabase.rpc('service_links', { p_service_id: id });
+    if (error) {
+      throw toAppError(error);
+    }
+    return data as unknown as ServiceLinks;
   }
 
   async checkSoapUiFile(file: File): Promise<string | null> {
@@ -134,6 +158,10 @@ export class ServicesService extends ResourceRepository<
       throw toAppError(error);
     }
     return data.signedUrl;
+  }
+
+  async downloadSoapUi(service: Service): Promise<void> {
+    openDownloadUrl(await this.soapUiDownloadUrl(service));
   }
 
   private async uploadSoapUi(file: File, ownerId: string = this.requireUserId()): Promise<string> {

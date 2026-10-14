@@ -11,16 +11,20 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { DatabasesService } from '../../core/data/databases.service';
 import { ServicesService, SoapUiChange } from '../../core/data/services.service';
 import { toAppError } from '../../core/errors/error-mapper';
 import {
+  DatabaseCatalogItem,
   SERVICE_AUTH_TYPES,
   SERVICE_LIMITS,
   SERVICE_PROTOCOLS,
   SERVICE_URL_PATTERN,
   Service,
   ServiceAuthType,
+  ServiceCatalogItem,
   ServiceInput,
+  ServiceKind,
   ServiceProtocol,
 } from '../../core/models';
 import { NotificationService } from '../../core/notifications/notification.service';
@@ -92,6 +96,47 @@ const orNull = (value: string) => value.trim() || null;
         }
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-6" novalidate>
+          <section class="card p-5" aria-labelledby="kind-heading">
+            <h2 id="kind-heading" class="font-semibold">
+              Tipo de componente <span class="text-red-600 dark:text-red-400">*</span>
+            </h2>
+            <div
+              class="mt-3 grid gap-3 sm:grid-cols-2"
+              role="radiogroup"
+              aria-labelledby="kind-heading"
+              [attr.aria-invalid]="kindInvalid() ? 'true' : null"
+            >
+              @for (option of kindOptions; track option.value) {
+                <label
+                  class="flex cursor-pointer items-start gap-3 rounded-md border p-4 transition"
+                  [class]="
+                    kind() === option.value
+                      ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
+                      : 'border-slate-300 hover:border-indigo-300 dark:border-slate-700'
+                  "
+                >
+                  <input
+                    type="radio"
+                    class="mt-1 size-4 accent-indigo-600"
+                    formControlName="kind"
+                    [value]="option.value"
+                  />
+                  <span>
+                    <span class="block font-medium">{{ option.label }}</span>
+                    <span class="block text-sm text-slate-500 dark:text-slate-400">{{
+                      option.hint
+                    }}</span>
+                  </span>
+                </label>
+              }
+            </div>
+            @if (kindInvalid()) {
+              <p class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+                Elige si es un servicio o un DataPower.
+              </p>
+            }
+          </section>
+
           <section class="card p-5">
             <app-resource-base-fields [controls]="form.controls" idPrefix="service" />
           </section>
@@ -138,24 +183,26 @@ const orNull = (value: string) => value.trim() || null;
                 pattern: 'Debe empezar por http:// o https:// y no contener espacios.',
               }"
             />
-            <div class="grid gap-4 sm:grid-cols-2">
-              <app-text-field
-                label="Dominio DataPower"
-                fieldId="service-dp-domain"
-                [control]="form.controls.datapower_domain"
-                placeholder="MIG1_postventa"
-                [optional]="true"
-                [maxlength]="limits.datapowerDomainMax"
-              />
-              <app-text-field
-                label="Servicio DataPower (MPGW / WS-Proxy)"
-                fieldId="service-dp-object"
-                [control]="form.controls.datapower_object"
-                placeholder="mpgw_svcProblem"
-                [optional]="true"
-                [maxlength]="limits.datapowerObjectMax"
-              />
-            </div>
+            @if (isDataPower()) {
+              <div class="grid gap-4 sm:grid-cols-2">
+                <app-text-field
+                  label="Dominio DataPower"
+                  fieldId="service-dp-domain"
+                  [control]="form.controls.datapower_domain"
+                  placeholder="MIG1_postventa"
+                  [optional]="true"
+                  [maxlength]="limits.datapowerDomainMax"
+                />
+                <app-text-field
+                  label="Servicio DataPower (MPGW / WS-Proxy)"
+                  fieldId="service-dp-object"
+                  [control]="form.controls.datapower_object"
+                  placeholder="mpgw_svcProblem"
+                  [optional]="true"
+                  [maxlength]="limits.datapowerObjectMax"
+                />
+              </div>
+            }
           </section>
 
           <section class="card space-y-4 p-5" aria-labelledby="auth-heading">
@@ -198,14 +245,9 @@ const orNull = (value: string) => value.trim() || null;
                 [optional]="true"
                 [maxlength]="limits.authNotesMax"
               />
-              <app-alert [type]="isPublic() ? 'warning' : 'info'">
-                @if (isPublic()) {
-                  Este servicio es <strong>público</strong>: todo el equipo verá estas credenciales.
-                  Evita guardar credenciales de producción.
-                } @else {
-                  Servicio privado: solo tú verás estas credenciales. Si lo haces público, las verá
-                  todo el equipo.
-                }
+              <app-alert type="info">
+                Las credenciales se guardan solo en este equipo, dentro de la base de datos local.
+                Evita guardar las de producción.
               </app-alert>
             }
           </section>
@@ -281,6 +323,9 @@ const orNull = (value: string) => value.trim() || null;
                 [index]="index"
                 [total]="operations().length"
                 [protocol]="protocol()"
+                [catalog]="targetCatalog()"
+                [databases]="databaseCatalog()"
+                [dataPower]="isDataPower()"
                 (remove)="removeOperation(index)"
                 (duplicate)="duplicateOperation(index)"
                 (moveUp)="moveOperation(index, -1)"
@@ -292,7 +337,15 @@ const orNull = (value: string) => value.trim() || null;
             </p>
           </section>
 
-          <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div class="form-actions">
+            @if (form.dirty) {
+              <span
+                class="flex items-center gap-1.5 text-sm text-amber-700 sm:me-auto dark:text-amber-300"
+              >
+                <span class="size-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+                Cambios sin guardar
+              </span>
+            }
             <a [routerLink]="cancelLink()" class="btn btn-secondary">Cancelar</a>
             <button type="submit" class="btn btn-primary" [disabled]="saving() || forbidden()">
               @if (saving()) {
@@ -311,6 +364,7 @@ export class ServiceFormPage implements HasUnsavedChanges {
   readonly id = input<string>();
 
   private readonly services = inject(ServicesService);
+  private readonly databases = inject(DatabasesService);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   private readonly permissions = inject(ResourcePermissions);
@@ -320,6 +374,8 @@ export class ServiceFormPage implements HasUnsavedChanges {
   protected readonly limits = SERVICE_LIMITS;
   protected readonly size = formatBytes;
   protected readonly saving = signal(false);
+  /** Cambia al intentar guardar: muestra los errores aunque el formulario no emita valor. */
+  private readonly submitted = signal(0);
   protected readonly error = signal<string | null>(null);
   protected readonly forbidden = signal(false);
   protected readonly soapUiFile = signal<File | null>(null);
@@ -330,7 +386,25 @@ export class ServiceFormPage implements HasUnsavedChanges {
     this.id() ? `/services/${this.id()}` : '/services',
   );
 
+  protected readonly kindOptions = [
+    {
+      value: 'service',
+      label: 'Servicio',
+      hint: 'REST o SOAP de backend. Puede llamar a varios servicios y usar SP.',
+    },
+    {
+      value: 'datapower',
+      label: 'DataPower',
+      hint: 'Expone y enruta cada operación a un solo servicio. No usa SP.',
+    },
+  ] as const;
+
   protected readonly form = new FormGroup({
+    // Obligatorio: sin valor por defecto para que se elija a conciencia.
+    kind: new FormControl<ServiceKind | ''>('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     ...createBaseResourceControls(),
     system: optionalText(SERVICE_LIMITS.systemMax),
     protocol: new FormControl<ServiceProtocol>('rest', { nonNullable: true }),
@@ -362,15 +436,39 @@ export class ServiceFormPage implements HasUnsavedChanges {
     initialValue: this.form.getRawValue(),
   });
   protected readonly protocol = computed(() => this.formValue().protocol ?? 'rest');
+  protected readonly kind = computed(() => this.formValue().kind ?? '');
+  /** DataPower: cada operación enruta a un solo servicio y no usa SP. */
+  protected readonly isDataPower = computed(() => this.kind() === 'datapower');
+  protected readonly kindInvalid = computed(() => {
+    this.formValue();
+    this.submitted();
+    const control = this.form.controls.kind;
+    return control.invalid && control.touched;
+  });
   protected readonly authType = computed(() => this.formValue().auth_type ?? 'none');
-  protected readonly isPublic = computed(() => this.formValue().visibility === 'public');
   /** Lista de grupos (nueva referencia en cada cambio para que la vista se actualice). */
+  protected readonly targetCatalog = computed(() =>
+    this.catalog().filter((item) => item.id !== this.id()),
+  );
   protected readonly operations = computed(() => {
     this.formValue();
     return [...this.form.controls.operations.controls];
   });
 
+  /** Servicios que pueden ser destino de una operación (todos menos este). */
+  protected readonly catalog = signal<ServiceCatalogItem[]>([]);
+  /** Conexiones con sus objetos, para indicar qué package/SP/tabla usa cada operación. */
+  protected readonly databaseCatalog = signal<DatabaseCatalogItem[]>([]);
+
   constructor() {
+    void this.services
+      .catalog()
+      .then((items) => this.catalog.set(items))
+      .catch(() => this.catalog.set([]));
+    void this.databases
+      .catalog()
+      .then((items) => this.databaseCatalog.set(items))
+      .catch(() => this.databaseCatalog.set([]));
     effect(() => {
       const service = this.loader.value();
       if (service) {
@@ -436,6 +534,7 @@ export class ServiceFormPage implements HasUnsavedChanges {
       return;
     }
     this.form.markAllAsTouched();
+    this.submitted.update((count) => count + 1);
     if (this.soapUiError()) {
       this.error.set('Revisa el proyecto SoapUI antes de guardar.');
       return;
@@ -447,14 +546,16 @@ export class ServiceFormPage implements HasUnsavedChanges {
 
     const value = this.form.getRawValue();
     const hasAuth = value.auth_type !== 'none';
+    const dataPower = value.kind === 'datapower';
     const payload: ServiceInput = {
+      kind: value.kind as ServiceKind,
       ...toBaseResourceInput(value),
       system: orNull(value.system),
       protocol: value.protocol,
       base_url: value.base_url.trim(),
       wsdl_url: orNull(value.wsdl_url),
-      datapower_domain: orNull(value.datapower_domain),
-      datapower_object: orNull(value.datapower_object),
+      datapower_domain: dataPower ? orNull(value.datapower_domain) : null,
+      datapower_object: dataPower ? orNull(value.datapower_object) : null,
       auth_type: value.auth_type,
       auth_username: hasAuth ? orNull(value.auth_username) : null,
       auth_secret: hasAuth ? value.auth_secret || null : null,
@@ -493,6 +594,7 @@ export class ServiceFormPage implements HasUnsavedChanges {
       operations.push(createOperationGroup(operation), { emitEvent: false });
     }
     this.form.reset({
+      kind: service.kind,
       title: service.title,
       description: service.description ?? '',
       tags: service.tags,

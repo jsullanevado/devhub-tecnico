@@ -7,7 +7,8 @@ import { Database } from '../supabase/database.types';
 import { SUPABASE } from '../supabase/supabase.client';
 
 type FavoriteInsert = Database['public']['Tables']['user_favorites']['Insert'];
-type FavoriteColumn = 'script_id' | 'lesson_id' | 'note_id' | 'manual_id' | 'service_id';
+type FavoriteColumn =
+  'script_id' | 'lesson_id' | 'note_id' | 'manual_id' | 'service_id' | 'database_id';
 
 const FAVORITE_COLUMN = {
   script: 'script_id',
@@ -15,11 +16,12 @@ const FAVORITE_COLUMN = {
   note: 'note_id',
   manual: 'manual_id',
   service: 'service_id',
+  database: 'database_id',
 } as const satisfies Record<ResourceType, FavoriteColumn>;
 
 // Literal único: supabase-js deduce el tipo de cada fila a partir del texto del select.
 const FAVORITE_SELECT =
-  'id, created_at, resource_type, script_id, lesson_id, note_id, manual_id, service_id, script:scripts(id, title, description, visibility, updated_at), lesson:lessons_learned(id, title, description, visibility, updated_at), note:notes(id, title, description, visibility, updated_at), manual:manuals(id, title, description, visibility, updated_at), service:services(id, title, description, visibility, updated_at)';
+  'id, created_at, resource_type, script_id, lesson_id, note_id, manual_id, service_id, database_id, script:scripts(id, title, description, visibility, updated_at), lesson:lessons_learned(id, title, description, visibility, updated_at), note:notes(id, title, description, visibility, updated_at), manual:manuals(id, title, description, visibility, updated_at), service:services(id, title, description, visibility, updated_at), database:databases(id, title, description, visibility, updated_at)';
 
 @Injectable({ providedIn: 'root' })
 export class FavoritesService {
@@ -37,7 +39,8 @@ export class FavoritesService {
     }
     return (data ?? []).map((row) => {
       const type = row.resource_type as ResourceType;
-      const resource = row.script ?? row.lesson ?? row.note ?? row.manual ?? row.service;
+      const resource =
+        row.script ?? row.lesson ?? row.note ?? row.manual ?? row.service ?? row.database;
       return {
         id: row.id,
         resource_type: type,
@@ -52,7 +55,7 @@ export class FavoritesService {
   async allIds(): Promise<Record<ResourceType, Set<string>>> {
     const { data, error } = await this.supabase
       .from('user_favorites')
-      .select('script_id, lesson_id, note_id, manual_id, service_id');
+      .select('script_id, lesson_id, note_id, manual_id, service_id, database_id');
     if (error) {
       throw toAppError(error);
     }
@@ -62,6 +65,7 @@ export class FavoritesService {
       note: new Set(),
       manual: new Set(),
       service: new Set(),
+      database: new Set(),
     };
     for (const row of data ?? []) {
       for (const type of Object.keys(FAVORITE_COLUMN) as ResourceType[]) {

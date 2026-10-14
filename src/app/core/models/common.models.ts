@@ -9,7 +9,7 @@ export const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'Público (todo el equipo)' },
 ] as const satisfies readonly { value: Visibility; label: string }[];
 
-export type ResourceType = 'script' | 'lesson' | 'note' | 'manual' | 'service';
+export type ResourceType = 'script' | 'lesson' | 'note' | 'manual' | 'service' | 'database';
 
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   script: 'Script',
@@ -17,6 +17,7 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   note: 'Nota',
   manual: 'Manual',
   service: 'Servicio',
+  database: 'Base de datos',
 };
 
 export interface AuthorSummary {

@@ -24,6 +24,7 @@ const NEW_ITEMS: readonly NewMenuItem[] = [
   { type: 'note', label: 'Nota técnica', icon: 'note' },
   { type: 'manual', label: 'Manual o documento', icon: 'book' },
   { type: 'service', label: 'Servicio (REST/SOAP)', icon: 'plug' },
+  { type: 'database', label: 'Conexión a base de datos', icon: 'database' },
 ];
 
 /** Botón "Nuevo" de la barra superior: crea cualquier recurso sin entrar antes al módulo. */

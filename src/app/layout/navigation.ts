@@ -73,6 +73,18 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         description:
           'Endpoints REST/SOAP y DataPower con headers, request, response y credenciales.',
       },
+      {
+        label: 'Bases de datos',
+        path: '/databases',
+        icon: 'database',
+        description: 'Conexiones y objetos de base de datos relacionados con servicios.',
+      },
+      {
+        label: 'Reportes',
+        path: '/reports',
+        icon: 'chart',
+        description: 'Trazabilidad de servicios, conexiones y objetos de base de datos.',
+      },
     ],
   },
   {
@@ -84,6 +96,24 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: '/tools',
         icon: 'wrench',
         description: 'Generadores de datos de prueba y formateadores XML/SOAP.',
+      },
+      {
+        label: 'Carga masiva',
+        path: '/bulk-import',
+        icon: 'upload',
+        description: 'Importa y exporta servicios y conexiones desde Excel.',
+      },
+      {
+        label: 'Flujos BPMN',
+        path: '/flows',
+        icon: 'flow',
+        description: 'Analiza páginas ASP.NET desde una carpeta local y genera diagramas BPMN.',
+      },
+      {
+        label: 'Generar MDI',
+        path: '/mdi',
+        icon: 'compare',
+        description: 'Compara ramas del clon local y genera el documento Word de pase.',
       },
     ],
   },

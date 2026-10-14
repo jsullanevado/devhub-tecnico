@@ -30,6 +30,7 @@ const PAGE_SIZE = 12;
       </app-page-header>
 
       <app-list-toolbar
+        viewKey="notes"
         subject="notas"
         [search]="query.search"
         [tags]="query.tags"
@@ -53,6 +54,7 @@ const PAGE_SIZE = 12;
       </app-list-toolbar>
 
       <app-list-view
+        viewKey="notes"
         [loading]="list.loading()"
         [error]="list.error()"
         [total]="list.page()?.total ?? null"
@@ -66,7 +68,9 @@ const PAGE_SIZE = 12;
         (pageChange)="list.update({ page: $event })"
       >
         <a empty-action routerLink="new" class="btn btn-primary">Nueva nota</a>
-        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 group-data-[layout=list]/list:grid-cols-1 group-data-[layout=list]/list:gap-2"
+        >
           @for (note of items(); track note.id) {
             <li>
               <app-resource-card favoriteType="note" [resource]="note" [link]="['/notes', note.id]">

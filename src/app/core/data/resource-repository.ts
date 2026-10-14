@@ -15,7 +15,8 @@ import {
 import { SUPABASE } from '../supabase/supabase.client';
 import { clamp, FTS_CONFIG, isUuid, withoutUndefined } from './query-utils';
 
-export type ResourceTable = 'scripts' | 'lessons_learned' | 'notes' | 'manuals' | 'services';
+export type ResourceTable =
+  'scripts' | 'lessons_learned' | 'notes' | 'manuals' | 'services' | 'databases';
 
 /** Filtro declarativo que cada repositorio traduce desde sus filtros tipados. */
 export interface FilterCondition {
@@ -25,7 +26,7 @@ export interface FilterCondition {
 }
 
 /**
- * CRUD común de los cuatro tipos de recurso (listado paginado con búsqueda,
+ * CRUD común de los tipos de recurso (listado paginado con búsqueda,
  * etiquetas y filtros; detalle; alta; edición; borrado).
  *
  * Decisión de tipado: la tabla es un parámetro de la subclase, y el tipado

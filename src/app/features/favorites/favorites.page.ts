@@ -24,6 +24,7 @@ const FILTERS: readonly { value: TypeFilter; label: string }[] = [
   { value: 'note', label: 'Notas' },
   { value: 'manual', label: 'Manuales' },
   { value: 'service', label: 'Servicios' },
+  { value: 'database', label: 'Bases de datos' },
 ];
 
 @Component({
@@ -56,7 +57,7 @@ const FILTERS: readonly { value: TypeFilter; label: string }[] = [
             class="mt-6 block"
             icon="star"
             [title]="items().length ? 'No hay favoritos de este tipo' : 'Aún no tienes favoritos'"
-            message="Pulsa la estrella en cualquier script, lección, nota, manual o servicio para guardarlo aquí."
+            message="Pulsa la estrella en cualquier script, lección, nota, manual, servicio o base de datos para guardarlo aquí."
           />
         } @else {
           <ul class="mt-6 space-y-3">
@@ -144,6 +145,7 @@ export class FavoritesPage {
       note: 0,
       manual: 0,
       service: 0,
+      database: 0,
     };
     for (const item of this.items()) {
       counts.all++;

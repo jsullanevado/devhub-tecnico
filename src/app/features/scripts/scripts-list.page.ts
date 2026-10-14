@@ -41,6 +41,7 @@ const PAGE_SIZE = 12;
       </app-page-header>
 
       <app-list-toolbar
+        viewKey="scripts"
         subject="scripts"
         [search]="query.search"
         [tags]="query.tags"
@@ -81,6 +82,7 @@ const PAGE_SIZE = 12;
       </app-list-toolbar>
 
       <app-list-view
+        viewKey="scripts"
         [loading]="list.loading()"
         [error]="list.error()"
         [total]="list.page()?.total ?? null"
@@ -94,7 +96,9 @@ const PAGE_SIZE = 12;
         (pageChange)="list.update({ page: $event })"
       >
         <a empty-action routerLink="new" class="btn btn-primary">Nuevo script</a>
-        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 group-data-[layout=list]/list:grid-cols-1 group-data-[layout=list]/list:gap-2"
+        >
           @for (script of items(); track script.id) {
             <li>
               <app-resource-card

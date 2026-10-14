@@ -182,7 +182,15 @@ const longText = (...validators: ValidatorFn[]) =>
             />
           </section>
 
-          <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div class="form-actions">
+            @if (form.dirty) {
+              <span
+                class="flex items-center gap-1.5 text-sm text-amber-700 sm:me-auto dark:text-amber-300"
+              >
+                <span class="size-2 rounded-full bg-amber-500" aria-hidden="true"></span>
+                Cambios sin guardar
+              </span>
+            }
             <a [routerLink]="cancelLink()" class="btn btn-secondary">Cancelar</a>
             <button type="submit" class="btn btn-primary" [disabled]="saving() || forbidden()">
               @if (saving()) {

@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 // Iconos de trazo (24×24, currentColor). Añadir aquí los nuevos que se necesiten.
 const ICON_PATHS = {
   home: 'M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10',
+  chart: 'M4 20V10M10 20V4M16 20v-7M2 20h20',
+  flow: 'M3 4h7v5H3zM14 15h7v5h-7zM6.5 9v3.5h11V15',
   code: 'M8 8l-4 4 4 4M16 8l4 4-4 4M14 4l-4 16',
   lightbulb:
     'M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z',
@@ -16,6 +18,7 @@ const ICON_PATHS = {
   moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   monitor: 'M3 4h18v12H3zM8 20h8M12 16v4',
   menu: 'M4 6h16M4 12h16M4 18h16',
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
   x: 'M6 6l12 12M18 6L6 18',
   logout: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
   'chevron-down': 'M6 9l6 6 6-6',
@@ -44,6 +47,10 @@ const ICON_PATHS = {
   'chevron-right': 'M9 6l6 6-6 6',
   tag: 'M3 12V4h8l10 10-8 8zM7.5 8a.5.5 0 1 0 0-.01',
   inbox: 'M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5',
+  lock: 'M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4',
+  database:
+    'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
+  folder: 'M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z',
   refresh: 'M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5',
   mail: 'M3 5h18v14H3zM3 6l9 7 9-7',
   compare: 'M4 4h7v16H4zM13 4h7v16h-7zM6.5 8h2M6.5 12h2M15.5 8h2M15.5 12h2M15.5 16h2',

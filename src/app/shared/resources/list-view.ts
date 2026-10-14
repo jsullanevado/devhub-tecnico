@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { Alert } from '../ui/alert/alert';
 import { EmptyState } from '../ui/empty-state/empty-state';
 import { Pagination } from '../ui/pagination/pagination';
 import { Spinner } from '../ui/spinner/spinner';
+import { LIST_LAYOUT, ViewModeStore } from './view-mode';
 
 /**
  * Estados de un listado: carga inicial, error con reintento, vacío (distinto si
@@ -13,6 +14,8 @@ import { Spinner } from '../ui/spinner/spinner';
   imports: [Alert, EmptyState, Pagination, Spinner],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
+  // Las tarjetas proyectadas leen la vista elegida (tarjetas o lista).
+  providers: [{ provide: LIST_LAYOUT, useFactory: () => inject(ListView).layout }],
   template: `
     @if (error(); as message) {
       <app-alert type="error">
@@ -44,7 +47,8 @@ import { Spinner } from '../ui/spinner/spinner';
     <div
       [class.hidden]="!!error() || !total()"
       [class.opacity-60]="loading()"
-      class="transition-opacity"
+      class="group/list transition-opacity"
+      [attr.data-layout]="layout()"
       [attr.aria-busy]="loading()"
     >
       <ng-content />
@@ -69,6 +73,14 @@ export class ListView {
   readonly hasFilters = input(false);
   readonly emptyTitle = input('Todavía no hay elementos');
   readonly emptyMessage = input('');
+  /** Módulo cuya vista (tarjetas o lista) se aplica; sin él, tarjetas. */
+  readonly viewKey = input<string>();
+
+  private readonly viewModes = inject(ViewModeStore);
+  readonly layout = computed(() => {
+    const key = this.viewKey();
+    return key ? this.viewModes.mode(key)() : 'cards';
+  });
 
   readonly retry = output<void>();
   readonly clearFilters = output<void>();
